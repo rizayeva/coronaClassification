@@ -7,34 +7,38 @@
 
 */
 
-// Import the Corona imagery
+///////////// Exporting training data for labeling
+
+//     Import the Corona imagery
 var image2 = ee.Image('users/rizayeva/corona_2_5m/DS1024-2104DA_1band_LZWcomp_EPSG32638_JPEG');
 var image3 = ee.Image('users/rizayeva/corona_2_5m/DS1024-2104DF_1band_JPEGcomp_EPSG32638_JPEG');
 
-// Assign the band names for afterward and forward-facing cameras as da and df, respectively
+//     Assign the band names for afterward- ('da') and forward-facing ('df') cameras
 var image2 = image2.select(['b1'],['da']);
 var image3 = image3.select(['b1'],['df']);
 
-// Concatenate the two images, so that we have one image with two bands
+//     Concatenate the two images, so that we have one image with two bands
 var img = ee.Image.cat([image2, image3]);
 print(img);
 // print('Band names: ', img.bandNames()); // ee.List of band names
 
-//POCHEMU MI ETO DELAYEM?
+//     POCHEMU MI ETO DELAYEM?????????????????????????????????????????????????????????????????????????????
 var img = ee.Image(img).divide(255);
 // Map.addLayer(img, {bands: ["df", "df", "da"], gamma: 0.8}, 'DS_DADF');
+
+//     Center the map view 
 Map.centerObject(img.geometry(), 7);
 
-// Import and visualize the point grid to be used for extraction of the segment grid
+//     Import and visualize the point grid to be used for extraction of the segment grid
 var table4 = ee.FeatureCollection('users/rizayeva/grid5km_label_07142020_EPSG32638');
 Map.addLayer(table4, {}, 'training points');
 
-/////////////Run segmentation
+///////////// Run segmentation
 
-// Set the seed Grid size
+//     Set the seed grid size
 var seeds = ee.Algorithms.Image.Segmentation.seedGrid(40);
 
-// Run SNIC on the regular square grid
+//     Run SNIC segmentation algorithm on the regular square grid
 var snic = ee.Algorithms.Image.Segmentation.SNIC({
   image: img, 
   size: 32,
@@ -43,17 +47,16 @@ var snic = ee.Algorithms.Image.Segmentation.SNIC({
   neighborhoodSize:256,
   seeds: seeds
 }).select(['da_mean', 'df_mean', 'clusters'], ['da', 'df', 'clusters']).reproject({crs: 'EPSG:4326', scale: 18});
-
 // print('Snic band names: ', snic.bandNames()); // ee.List of band names
 
-// Select clusters from segmentation results
+//     Select clusters from segmentation results
 var clusters = snic.select('clusters');
 //Map.addLayer(clusters.randomVisualizer(), {}, 'clusters', false)
-Map.addLayer(snic, {bands: ['da', 'df'/*, 'b1_2', 'b1_3'*/], min:0, max:1, gamma: 0.8}, 'means', false);
+// Map.addLayer(snic, {bands: ['da', 'df'], min:0, max:1, gamma: 0.8}, 'means', false);
 
-/////////////Vectorize the objects
+///////////// Vectorize the objects
 
-// Create a cell grid across the image
+//     Create a cell grid across the image
 var tiles = image2.addBands(image3).reduceToVectors({
   reducer: ee.Reducer.mean(), 
   geometry: image2.addBands(image3).geometry(), 
@@ -64,41 +67,42 @@ var tiles = image2.addBands(image3).reduceToVectors({
 });
 Map.addLayer(tiles, {}, 'tiles2', false);
 
-// Create buffers for the cell grid across the image to prevent clipped segments later on
-// Build the function
+///////////// Create buffers for the cell grid across the image to prevent clipped segments later on
+
+//     Build the function
 var buffer = function(feature) {
 return feature.buffer(1000);};
-// Map the function
+//     Map the function
 var tilesbuffer = tiles.map(buffer);
 // print('tilesbuffer', tilesbuffer);
 
-// Get the total number of the cells across the image
+//     Get the total number of the cells across the image
 var tilesbuffer_list =tilesbuffer.toList(tilesbuffer.size());
 // print('tilesbuffer_list', tilesbuffer_list);
 Map.addLayer(tilesbuffer, {}, 'tilesbuffer');
 var size = tilesbuffer_list.size().getInfo();
 // ee.Feature(collection.toList(3).get(1))
 
-// Select the column from the training data that has unique values for each of the points in the point grid
+//     Select the column from the training data that has unique values for each of the points in the point grid
 var classes = ee.FeatureCollection(table4.select('FID_test_l'));
 print('classes', classes.first());
 
 
-/////////////Get segments overlapping with the point grid
+///////////// Get segments overlapping with the point grid
 
-// Define a spatial filter as geometries that intersect.
+//     Define a spatial filter as geometries that intersect.
 var spatialFilter = ee.Filter.intersects({
   leftField: '.geo',
   rightField: '.geo',
   maxError: 10
 });
 
-// Define a save all join.
+//     Define a save all join.
 var saveAllJoin = ee.Join.saveAll({
   matchesKey: 'FID_test_l',
 });
 
-// Create a for loop to extract all segments that overlapp with the point grid
+//     Create a for loop to extract all segments that overlapp with the point grid
 var trainobjs = [];
 var i;
 for (i = 0; i < size; i++) {
@@ -113,16 +117,16 @@ trainobjs[i]=trainingobjects;
 }
 print('trainobjs', trainobjs);
 
-// Convert the list of Feature collections into a Feature collection of Feature collections
+//     Convert the list of Feature collections into a Feature collection of Feature collections
 var trainobjsfeat = ee.FeatureCollection(trainobjs);
 print('Feature collection of feature collections - trainobjsfeat', trainobjsfeat);
 
-//To get a Feature collection, flatten the Feature collection of Feature collections 
+//     To get a Feature collection, flatten the Feature collection of Feature collections 
 var trainobjsfeat = trainobjsfeat.flatten();
 print('Feature collection - trainobjsfeat', trainobjsfeat);
 Map.addLayer(trainobjsfeat, {}, 'trainobjsfeat', false);
 
-// Export segment grid that overlaps with the point grid in GeoJSON format
+//     Export segment grid that overlaps with the point grid in GeoJSON format
 Export.table.toDrive({
   collection: trainobjsfeat,//class,
   description: 'trainobjsfeatclass_DS10',
