@@ -1,7 +1,6 @@
 # Historical Corona satellite imagery classification within GEE
 
-This and that
-
+Description
 
 
 
@@ -20,6 +19,6 @@ Hello
 
 
 
-$ how are you
+$ Readme
 
 # Hello
