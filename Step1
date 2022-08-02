@@ -1,13 +1,9 @@
 /*  Author: Afag Rizayeva
     Date: 01-17-2022
-    Purpose: Calculate second-order texture metrics from Corona imagery
-    Inputs: 2 Corona image layers manually imported in GEE
-
-    Instructions:
-
+    Purpose: Export the training objects for further labeling
+    Inputs: 2 Corona image layers manually imported in GEE, point grid
 */
 
-///////////// Exporting training data for labeling
 
 //     Import the Corona imagery
 var image2 = ee.Image('users/rizayeva/corona_2_5m/DS1011-1040DA_2_5m_JPEG_1band_EPSG32638');
