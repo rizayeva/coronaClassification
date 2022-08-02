@@ -1,0 +1,331 @@
+/*  Author: Afag Rizayeva
+    Date: 12-26-2021
+    Purpose: Calculate second-order texture metrics from Corona imagery
+    Inputs: 2 Corona image layers manually imported in GEE
+
+    Instructions:
+    Delete the geometries that I used.
+    Adjust lines 14 and 16 according to the geometry we want to calculate by clipping them with the geometry cordinates (uncomment lines 15 and 17).
+    Press Ctrl+F twice. In Replace from cell paste: "1011-1040" and in Replace to cell paste your Corona images' code.
+    Do it once again without the hyphen.
+    Run the code first and create the appropriate geometries. (because the whole image is usually too large, but depends on your study. You may not need this step).
+    When exporting the layers make sure to add the geometry number at the end of the file and task names in the pop-up window
+*/
+var image2 = ee.Image('users/rizayeva/corona_2_5m/DS1011-1040DA_2_5m_JPEG_1band_EPSG32638');
+                // .clip(geometry1);
+var image3 = ee.Image('users/rizayeva/corona_2_5m/DS1011-1040DF_2_5m_JPEG_1band_EPSG32638');
+                // .clip(geometry1);
+
+//geometry of the image
+var geometry10111040 = image2.addBands(image3).geometry();
+Map.addLayer(geometry10111040, {}, 'geometry10111040', false);
+
+var img = ee.Image.cat([image2, image3]);
+// print(img);
+// Map.addLayer(table, {}, 'table', false);
+Map.addLayer(img, {bands: ["ds10111040df", "ds10111040df", "ds10111040da"], gamma: 0.8}, 'DS1011-1040', false);
+
+var bands = ['ds10111040da', 'ds10111040df'];
+img = ee.Image(img).divide(255).select(bands);
+Map.centerObject(geometry10111040, 13);
+Map.addLayer(img, {gamma: 0.8}, 'RGBN', false);
+
+var seeds = ee.Algorithms.Image.Segmentation.seedGrid(40);
+// Run SNIC on the regular square grid.
+var snic = ee.Algorithms.Image.Segmentation.SNIC({
+  image: img, 
+  size: 32,
+  compactness: 0.1,
+  connectivity: 4,
+  neighborhoodSize:256,
+  seeds: seeds
+}).select(['ds10111040da_mean', 'ds10111040df_mean', 'clusters'], ['ds10111040da', 'ds10111040df', 'clusters']).reproject({crs: 'EPSG:4326', scale: 18});
+
+var clusters = snic.select('clusters');
+Map.addLayer(clusters, {}, 'clusters', false);
+// Map.addLayer(clusters.randomVisualizer(), {}, 'clusters')
+Map.addLayer(snic, {bands: ["ds10111040df", "ds10111040df", "ds10111040da"], min:0, max:1, gamma: 0.8}, 'means', false);
+
+var tiles = image2.addBands(image3).reduceToVectors({
+  reducer: ee.Reducer.mean(), 
+  geometry: image2.addBands(image3).geometry(), 
+  geometryType: 'bb',
+  scale: 10000, 
+  eightConnected: false,
+  labelProperty: 'object',
+  maxPixels: 1e15
+});
+// print(tiles);
+Map.addLayer(tiles, {}, 'tiles');
+
+var buffer = function(feature) {
+return feature.buffer(1000);
+};
+
+var tilesbuffer = tiles.map(buffer);
+var tilesbuffer = ee.FeatureCollection(tilesbuffer);
+// print('tilesbuffer', tilesbuffer);
+Map.addLayer(tilesbuffer, {}, 'tilesbuffer');
+
+var tilesbuffer_list =tilesbuffer.toList(tilesbuffer.size());
+// print('tilesbuffer_list', tilesbuffer_list);
+var size = tilesbuffer_list.size().getInfo();
+
+// Calculate texture for each object
+var freqHist = clusters.reduceRegion({
+  reducer: ee.Reducer.frequencyHistogram(),
+  geometry: geometry10111040,
+  scale: 2.5,
+  maxPixels: 1e13
+});
+// print(freqHist);
+
+// print('first', ee.Dictionary(freqHist).first());
+var obj = freqHist.get("clusters");
+// print('obj', obj)
+
+var keys = ee.Dictionary(obj).keys();
+// print ('parse', ee.Number.parse(keys.get(0)));
+// print ('keys', keys);
+
+// Entropy DA
+var entropyDA = function(objctID) {
+  return ee.Image(image2.updateMask(clusters.eq(ee.Number.parse(objctID))).glcmTexture({size: 3}).select('ds10111040da_ent'));
+};
+
+var cliptile = [];
+var i;
+for (i = 0; i < size; i++) {
+// var til = image2.clip(ee.Feature(tilesbuffer_list.get(i)).geometry());
+
+var ds10111040da_ent = ee.ImageCollection((ee.Dictionary(clusters.reduceRegion({
+  reducer: ee.Reducer.frequencyHistogram(),
+  geometry: ee.Feature(tilesbuffer_list.get(i)).geometry(),
+  scale: 2.5,
+  maxPixels: 1e13
+}).get("clusters")).keys()).map(entropyDA)).mosaic().toFloat();
+
+cliptile[i]=ds10111040da_ent;
+// print(cliptile)
+// Map.addLayer(ee.Image(cliptile));
+}
+
+var cliptileMosaic = ee.ImageCollection(cliptile).mosaic();
+// var cliptileMosaic = cliptileMosaic.addBands(clusters).reduceConnectedComponents(ee.Reducer.mean(), 'clusters', 256).select(['ds10111040da_ent'], ['ds10111040da_ent_mean']);
+// print(cliptileMosaic);
+// Map.addLayer(cliptileMosaic);
+var cliptileMosaictoFloat = cliptileMosaic.toFloat();
+// print(cliptileMosaictoFloat);
+// Map.addLayer(cliptileMosaictoFloat);
+
+ Export.image.toAsset({
+  image: cliptileMosaictoFloat,
+  description: "entropy_1011-1040DA_7x7_geometry",
+  assetId: "GLCM_10111040/entropy_1011-1040DA_7x7_geometry",
+  scale: 2.5,
+  region: geometry10111040,
+  maxPixels:1e13,
+});
+
+
+
+
+// Entropy DF
+var entropyDF = function(objctID) {
+  return ee.Image(image3.clip(tilesbuffer_list.get(i)).updateMask(clusters.eq(ee.Number.parse(objctID))).glcmTexture({size: 3}).select('ds10111040df_ent'));
+};
+
+var cliptile = [];
+var i;
+for (i = 0; i < size; i++) {
+// var til = image3.clip(ee.Feature(tilesbuffer_list.get(i)).geometry());
+
+var ds10111040df_ent = ee.ImageCollection((ee.Dictionary(clusters.reduceRegion({
+  reducer: ee.Reducer.frequencyHistogram(),
+  geometry: ee.Feature(tilesbuffer_list.get(i)).geometry(),
+  scale: 2.5,
+  maxPixels: 1e13
+}).get("clusters")).keys()).map(entropyDF)).mosaic().toFloat();
+
+cliptile[i]=ds10111040df_ent;
+// print(cliptile)
+// Map.addLayer(ee.Image(cliptile));
+}
+
+var cliptileMosaic = ee.ImageCollection(cliptile).mosaic();
+// var cliptileMosaic = cliptileMosaic.addBands(clusters).reduceConnectedComponents(ee.Reducer.mean(), 'clusters', 256).select(['ds10111040df_ent'], ['ds10111040df_ent_mean']);
+// print(cliptileMosaic);
+// Map.addLayer(cliptileMosaic);
+var cliptileMosaictoFloat = cliptileMosaic.toFloat();
+// print(cliptileMosaictoFloat);
+// Map.addLayer(cliptileMosaictoFloat);
+
+ Export.image.toAsset({
+  image: cliptileMosaictoFloat,
+  description: "entropy_1011-1040DF_7x7_geometry",
+  assetId: "GLCM_10111040/entropy_1011-1040DF_7x7_geometry",
+  scale: 2.5,
+  region: geometry10111040,
+  maxPixels:1e13,
+});
+
+
+// Homogeneity DA
+var homogeneityDA = function(objctID) {
+  return ee.Image(image2.updateMask(clusters.eq(ee.Number.parse(objctID))).glcmTexture({size: 3}).select('ds10111040da_idm'));
+};
+
+var cliptile = [];
+var i;
+for (i = 0; i < size; i++) {
+// var til = image2.clip(ee.Feature(tilesbuffer_list.get(i)).geometry());
+
+var ds10111040da_idm = ee.ImageCollection((ee.Dictionary(clusters.reduceRegion({
+  reducer: ee.Reducer.frequencyHistogram(),
+  geometry: ee.Feature(tilesbuffer_list.get(i)).geometry(),
+  scale: 2.5,
+  maxPixels: 1e13
+}).get("clusters")).keys()).map(homogeneityDA)).mosaic().toFloat();
+
+cliptile[i]=ds10111040da_idm;
+// print(cliptile)
+// Map.addLayer(ee.Image(cliptile));
+}
+
+var cliptileMosaic = ee.ImageCollection(cliptile).mosaic();
+// var cliptileMosaic = cliptileMosaic.addBands(clusters).reduceConnectedComponents(ee.Reducer.mean(), 'clusters', 256).select(['ds10111040df_ent'], ['ds10111040df_ent_mean']);
+// print(cliptileMosaic);
+// Map.addLayer(cliptileMosaic);
+var cliptileMosaictoFloat = cliptileMosaic.toFloat();
+// print(cliptileMosaictoFloat);
+// Map.addLayer(cliptileMosaictoFloat);
+
+ Export.image.toAsset({
+  image: cliptileMosaictoFloat,
+  description: "homogeneity_1011-1040DA_7x7_geometry",
+  assetId: 'GLCM_10111040/homogeneity_1011-1040DA_7x7_geometry',
+  scale: 2.5,
+  region: geometry10111040,
+  maxPixels:1e13,
+});
+
+
+// Homogeneity DF
+var homogeneityDF = function(objctID) {
+  return ee.Image(image3.clip(tilesbuffer_list.get(i)).updateMask(clusters.eq(ee.Number.parse(objctID))).glcmTexture({size: 3}).select('ds10111040df_idm'));
+};
+
+var cliptile = [];
+var i;
+for (i = 0; i < size; i++) {
+// var til = image3.clip(ee.Feature(tilesbuffer_list.get(i)).geometry());
+
+var ds10111040df_idm = ee.ImageCollection((ee.Dictionary(clusters.reduceRegion({
+  reducer: ee.Reducer.frequencyHistogram(),
+  geometry: ee.Feature(tilesbuffer_list.get(i)).geometry(),
+  scale: 2.5,
+  maxPixels: 1e13
+}).get("clusters")).keys()).map(homogeneityDF)).mosaic().toFloat();
+
+cliptile[i]=ds10111040df_idm;
+// print(cliptile)
+// Map.addLayer(ee.Image(cliptile));
+}
+
+var cliptileMosaic = ee.ImageCollection(cliptile).mosaic();
+// // var cliptileMosaic = cliptileMosaic.addBands(clusters).reduceConnectedComponents(ee.Reducer.mean(), 'clusters', 256).select(['ds10111040df_ent'], ['ds10111040df_ent_mean']);
+// print(cliptileMosaic);
+// Map.addLayer(cliptileMosaic);
+var cliptileMosaictoFloat = cliptileMosaic.toFloat();
+// // // print(cliptileMosaictoFloat);
+// // Map.addLayer(cliptileMosaictoFloat);
+
+Export.image.toAsset({
+  image: cliptileMosaictoFloat,
+  description: "homogeneity_1011-1040DF_7x7_geometry",
+  assetId: 'GLCM_10111040/homogeneity_1011-1040DF_7x7_geometry',
+  scale: 2.5,
+  region: geometry10111040,
+  maxPixels:1e13,
+});
+
+
+// Angular Second Moment DA
+var angularSecondMomentDA = function(objctID) {
+  return ee.Image(image2.updateMask(clusters.eq(ee.Number.parse(objctID))).glcmTexture({size: 3}).select('ds10111040da_asm'));
+};
+
+var cliptile = [];
+var i;
+for (i = 0; i < size; i++) {
+// var til = image2.clip(ee.Feature(tilesbuffer_list.get(i)).geometry());
+
+var ds10111040da_asm = ee.ImageCollection((ee.Dictionary(clusters.reduceRegion({
+  reducer: ee.Reducer.frequencyHistogram(),
+  geometry: ee.Feature(tilesbuffer_list.get(i)).geometry(),
+  scale: 2.5,
+  maxPixels: 1e13
+}).get("clusters")).keys()).map(angularSecondMomentDA)).mosaic().toFloat();
+
+cliptile[i]=ds10111040da_asm;
+// print(cliptile)
+// Map.addLayer(ee.Image(cliptile));
+}
+
+var cliptileMosaic = ee.ImageCollection(cliptile).mosaic();
+// var cliptileMosaic = cliptileMosaic.addBands(clusters).reduceConnectedComponents(ee.Reducer.mean(), 'clusters', 256).select(['ds10111040da_ent'], ['ds10111040da_ent_mean']);
+// print(cliptileMosaic);
+// Map.addLayer(cliptileMosaic);
+var cliptileMosaictoFloat = cliptileMosaic.toFloat();
+// print(cliptileMosaictoFloat);
+// Map.addLayer(cliptileMosaictoFloat);
+
+ Export.image.toAsset({
+  image: cliptileMosaictoFloat,
+  description: "angularSecondMoment_1011-1040DA_7x7_geometry",
+  assetId: "GLCM_10111040/angularSecondMoment_1011-1040DA_7x7_geometry",
+  scale: 2.5,
+  region: geometry10111040,
+  maxPixels:1e13,
+});
+
+
+
+// Angular Second Moment DF
+var angularSecondMomentDF = function(objctID) {
+  return ee.Image(image3.clip(tilesbuffer_list.get(i)).updateMask(clusters.eq(ee.Number.parse(objctID))).glcmTexture({size: 3}).select('ds10111040df_asm'));
+};
+
+var cliptile = [];
+var i;
+for (i = 0; i < size; i++) {
+// var til = image3.clip(ee.Feature(tilesbuffer_list.get(i)).geometry());
+
+var ds10111040df_asm = ee.ImageCollection((ee.Dictionary(clusters.reduceRegion({
+  reducer: ee.Reducer.frequencyHistogram(),
+  geometry: ee.Feature(tilesbuffer_list.get(i)).geometry(),
+  scale: 2.5,
+  maxPixels: 1e13
+}).get("clusters")).keys()).map(angularSecondMomentDF)).mosaic().toFloat();
+
+cliptile[i]=ds10111040df_asm;
+// print(cliptile)
+// Map.addLayer(ee.Image(cliptile));
+}
+
+var cliptileMosaic = ee.ImageCollection(cliptile).mosaic();
+// var cliptileMosaic = cliptileMosaic.addBands(clusters).reduceConnectedComponents(ee.Reducer.mean(), 'clusters', 256).select(['ds10111040df_ent'], ['ds10111040df_ent_mean']);
+// print(cliptileMosaic);
+// Map.addLayer(cliptileMosaic);
+var cliptileMosaictoFloat = cliptileMosaic.toFloat();
+// print(cliptileMosaictoFloat);
+// Map.addLayer(cliptileMosaictoFloat);
+
+ Export.image.toAsset({
+  image: cliptileMosaictoFloat,
+  description: "angularSecondMoment_1011-1040DF_7x7_geometry",
+  assetId: "GLCM_10111040/angularSecondMoment_1011-1040DF_7x7_geometry",
+  scale: 2.5,
+  region: geometry10111040,
+  maxPixels:1e13,
+});
