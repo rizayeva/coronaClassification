@@ -38,27 +38,6 @@ var imageVisParam = {bands: ['ds10111040df_asm'], min: 0.015071922070983398, max
 Map.addLayer(angularSecondMoment_DF, imageVisParam, 'angularSecondMoment_DF', false);
 
 var paletteJohanna = ['075b0e', '075b0e', '075b0e', 'ebebeb', '9de64e', 'e2d544', 'ff0000', '3f553c', '0033ff', '383838', '0033ff'];
-var train = ee.FeatureCollection('users/rizayeva/Training_Testing_10111040/Training08112021_1');
-// var test = ee.FeatureCollection('users/rizayeva/Training_Testing_10111040/Testing01172022_1');
-// var train2 = ee.FeatureCollection('users/rizayeva/Training_Testing_10111040/Training01172022_2');
-// var test2 = ee.FeatureCollection('users/rizayeva/Training_Testing_10111040/Testing01172022_2');
-// var train3 = ee.FeatureCollection('users/rizayeva/Training_Testing_10111040/Training01172022_3');
-// var test3 = ee.FeatureCollection('users/rizayeva/Training_Testing_10111040/Testing01172022_3');
-// var train4 = ee.FeatureCollection('users/rizayeva/Training_Testing_10111040/Training01172022_4');
-// var test4 = ee.FeatureCollection('users/rizayeva/Training_Testing_10111040/Testing01172022_4');
-// var train5 = ee.FeatureCollection('users/rizayeva/Training_Testing_10111040/Training01172022_5');
-// var test5 = ee.FeatureCollection('users/rizayeva/Training_Testing_10111040/Testing01172022_5');
-// var train6 = ee.FeatureCollection('users/rizayeva/Training_Testing_10111040/Training01172022_6');
-// var test6 = ee.FeatureCollection('users/rizayeva/Training_Testing_10111040/Testing01172022_6');
-// var train7 = ee.FeatureCollection('users/rizayeva/Training_Testing_10111040/Training01172022_7');
-// var test7 = ee.FeatureCollection('users/rizayeva/Training_Testing_10111040/Testing01172022_7');
-// var train8 = ee.FeatureCollection('users/rizayeva/Training_Testing_10111040/Training01172022_8');
-// var test8 = ee.FeatureCollection('users/rizayeva/Training_Testing_10111040/Testing01172022_8');
-// var train9 = ee.FeatureCollection('users/rizayeva/Training_Testing_10111040/Training01172022_9');
-// var test9 = ee.FeatureCollection('users/rizayeva/Training_Testing_10111040/Testing01172022_9');
-// var train10 = ee.FeatureCollection('users/rizayeva/Training_Testing_10111040/Training01172022_10');
-// var test10 = ee.FeatureCollection('users/rizayeva/Training_Testing_10111040/Testing01172022_10');
-
 
 var image2 = ee.Image('users/rizayeva/corona_2_5m/DS1011-1040DA_2_5m_JPEG_1band_EPSG32638').rename(['ds10111040da']);
 var image3 = ee.Image('users/rizayeva/corona_2_5m/DS1011-1040DF_2_5m_JPEG_1band_EPSG32638').rename(['ds10111040df']);
