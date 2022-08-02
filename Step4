@@ -201,8 +201,8 @@ Map.addLayer(classified1, {min: 1, max: 11, palette: paletteJohanna}, 'Classifie
 
 Export.image.toAsset({
   image: classified1.toByte(),//.toFloat(),
-  description: "classification_objectRF_wDEM" + i,
-  assetId: "classification_objectRF_wDEM" + i,
+  description: "classification_objectRF_wDEM" + (i+1),
+  assetId: "classification_objectRF_wDEM" + (i+1),
   scale: 2.5,
   region: clip,//train.geometry().bounds(),
   maxPixels:1e13,
@@ -235,7 +235,7 @@ var overall = testAccuracy.accuracy();
 // Export the FeatureCollection.
 Export.table.toDrive({
   collection: ee.FeatureCollection(Matrix),
-  description:'testAccuracy_object08122021_wDEM' + i,
+  description:'testAccuracy_object08122021_wDEM' + (i+1),
   folder: 'testAccuracy',
   fileFormat: 'csv'
 });
