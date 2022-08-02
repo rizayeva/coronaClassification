@@ -11,15 +11,18 @@
     Run the code first and create the appropriate geometries. (because the whole image is usually too large, but depends on your study. You may not need this step).
     When exporting the layers make sure to add the geometry number at the end of the file and task names in the pop-up window
 */
+
+//     Import the images and if needed clip by geometry
 var image2 = ee.Image('users/rizayeva/corona_2_5m/DS1011-1040DA_2_5m_JPEG_1band_EPSG32638');
                 // .clip(geometry1);
 var image3 = ee.Image('users/rizayeva/corona_2_5m/DS1011-1040DF_2_5m_JPEG_1band_EPSG32638');
                 // .clip(geometry1);
 
-//geometry of the image
+//     Build the image geometry
 var geometry10111040 = image2.addBands(image3).geometry();
 Map.addLayer(geometry10111040, {}, 'geometry10111040', false);
 
+//     Concatenate the two images, so that we have one image with two bands
 var img = ee.Image.cat([image2, image3]);
 // print(img);
 // Map.addLayer(table, {}, 'table', false);
@@ -30,8 +33,12 @@ img = ee.Image(img).divide(255).select(bands);
 Map.centerObject(geometry10111040, 13);
 Map.addLayer(img, {gamma: 0.8}, 'RGBN', false);
 
+///////////// Run segmentation
+
+//     Set the seed grid size
 var seeds = ee.Algorithms.Image.Segmentation.seedGrid(40);
-// Run SNIC on the regular square grid.
+
+//     Run SNIC segmentation algorithm on the regular square grid
 var snic = ee.Algorithms.Image.Segmentation.SNIC({
   image: img, 
   size: 32,
@@ -41,16 +48,18 @@ var snic = ee.Algorithms.Image.Segmentation.SNIC({
   seeds: seeds
 }).select(['ds10111040da_mean', 'ds10111040df_mean', 'clusters'], ['ds10111040da', 'ds10111040df', 'clusters']).reproject({crs: 'EPSG:4326', scale: 18});
 
+//     Select clusters from segmentation results
 var clusters = snic.select('clusters');
 Map.addLayer(clusters, {}, 'clusters', false);
 // Map.addLayer(clusters.randomVisualizer(), {}, 'clusters')
-Map.addLayer(snic, {bands: ["ds10111040df", "ds10111040df", "ds10111040da"], min:0, max:1, gamma: 0.8}, 'means', false);
+// Map.addLayer(snic, {bands: ["ds10111040df", "ds10111040df", "ds10111040da"], min:0, max:1, gamma: 0.8}, 'means', false);
 
+//     Create a cell grid across the image
 var tiles = image2.addBands(image3).reduceToVectors({
   reducer: ee.Reducer.mean(), 
   geometry: image2.addBands(image3).geometry(), 
   geometryType: 'bb',
-  scale: 10000, 
+  scale: 12000, 
   eightConnected: false,
   labelProperty: 'object',
   maxPixels: 1e15
@@ -58,20 +67,26 @@ var tiles = image2.addBands(image3).reduceToVectors({
 // print(tiles);
 Map.addLayer(tiles, {}, 'tiles');
 
+///////////// Create buffers for the cell grid across the image to prevent clipped segments later on
+
+//     Build the function
 var buffer = function(feature) {
 return feature.buffer(1000);
 };
 
+//     Map the function
 var tilesbuffer = tiles.map(buffer);
 var tilesbuffer = ee.FeatureCollection(tilesbuffer);
 // print('tilesbuffer', tilesbuffer);
 Map.addLayer(tilesbuffer, {}, 'tilesbuffer');
 
-var tilesbuffer_list =tilesbuffer.toList(tilesbuffer.size());
+//     Get the total number of the cells across the image
+var tilesbuffer_list = tilesbuffer.toList(tilesbuffer.size());
 // print('tilesbuffer_list', tilesbuffer_list);
 var size = tilesbuffer_list.size().getInfo();
 
-// Calculate texture for each object
+///////////// Calculate texture for each object obtained as a result of segmentation
+//     Get the unique IDs for clusters
 var freqHist = clusters.reduceRegion({
   reducer: ee.Reducer.frequencyHistogram(),
   geometry: geometry10111040,
@@ -88,11 +103,14 @@ var keys = ee.Dictionary(obj).keys();
 // print ('parse', ee.Number.parse(keys.get(0)));
 // print ('keys', keys);
 
-// Entropy DA
+
+//     Entropy DA
+//     Build a function to calculate entropy
 var entropyDA = function(objctID) {
   return ee.Image(image2.updateMask(clusters.eq(ee.Number.parse(objctID))).glcmTexture({size: 3}).select('ds10111040da_ent'));
 };
 
+//     Apply the function to each object within the image for intra-class variability
 var cliptile = [];
 var i;
 for (i = 0; i < size; i++) {
@@ -110,6 +128,7 @@ cliptile[i]=ds10111040da_ent;
 // Map.addLayer(ee.Image(cliptile));
 }
 
+//     Mosaic the resulting rasters
 var cliptileMosaic = ee.ImageCollection(cliptile).mosaic();
 // var cliptileMosaic = cliptileMosaic.addBands(clusters).reduceConnectedComponents(ee.Reducer.mean(), 'clusters', 256).select(['ds10111040da_ent'], ['ds10111040da_ent_mean']);
 // print(cliptileMosaic);
@@ -118,6 +137,7 @@ var cliptileMosaictoFloat = cliptileMosaic.toFloat();
 // print(cliptileMosaictoFloat);
 // Map.addLayer(cliptileMosaictoFloat);
 
+//     Export the resulting texture raster
  Export.image.toAsset({
   image: cliptileMosaictoFloat,
   description: "entropy_1011-1040DA_7x7_geometry",
@@ -128,13 +148,13 @@ var cliptileMosaictoFloat = cliptileMosaic.toFloat();
 });
 
 
-
-
-// Entropy DF
+//     Entropy DF
+//     Build a function to calculate entropy
 var entropyDF = function(objctID) {
   return ee.Image(image3.clip(tilesbuffer_list.get(i)).updateMask(clusters.eq(ee.Number.parse(objctID))).glcmTexture({size: 3}).select('ds10111040df_ent'));
 };
 
+//     Apply the function to each object within the image for intra-class variability
 var cliptile = [];
 var i;
 for (i = 0; i < size; i++) {
@@ -152,6 +172,7 @@ cliptile[i]=ds10111040df_ent;
 // Map.addLayer(ee.Image(cliptile));
 }
 
+//     Mosaic the resulting rasters
 var cliptileMosaic = ee.ImageCollection(cliptile).mosaic();
 // var cliptileMosaic = cliptileMosaic.addBands(clusters).reduceConnectedComponents(ee.Reducer.mean(), 'clusters', 256).select(['ds10111040df_ent'], ['ds10111040df_ent_mean']);
 // print(cliptileMosaic);
@@ -160,7 +181,8 @@ var cliptileMosaictoFloat = cliptileMosaic.toFloat();
 // print(cliptileMosaictoFloat);
 // Map.addLayer(cliptileMosaictoFloat);
 
- Export.image.toAsset({
+//     Export the resulting texture raster
+Export.image.toAsset({
   image: cliptileMosaictoFloat,
   description: "entropy_1011-1040DF_7x7_geometry",
   assetId: "GLCM_10111040/entropy_1011-1040DF_7x7_geometry",
@@ -170,11 +192,13 @@ var cliptileMosaictoFloat = cliptileMosaic.toFloat();
 });
 
 
-// Homogeneity DA
+//     Homogeneity DA
+//     Build a function to calculate homogeneity
 var homogeneityDA = function(objctID) {
   return ee.Image(image2.updateMask(clusters.eq(ee.Number.parse(objctID))).glcmTexture({size: 3}).select('ds10111040da_idm'));
 };
 
+//     Apply the function to each object within the image for intra-class variability
 var cliptile = [];
 var i;
 for (i = 0; i < size; i++) {
@@ -192,6 +216,7 @@ cliptile[i]=ds10111040da_idm;
 // Map.addLayer(ee.Image(cliptile));
 }
 
+//     Mosaic the resulting rasters
 var cliptileMosaic = ee.ImageCollection(cliptile).mosaic();
 // var cliptileMosaic = cliptileMosaic.addBands(clusters).reduceConnectedComponents(ee.Reducer.mean(), 'clusters', 256).select(['ds10111040df_ent'], ['ds10111040df_ent_mean']);
 // print(cliptileMosaic);
@@ -200,7 +225,8 @@ var cliptileMosaictoFloat = cliptileMosaic.toFloat();
 // print(cliptileMosaictoFloat);
 // Map.addLayer(cliptileMosaictoFloat);
 
- Export.image.toAsset({
+//     Export the resulting texture raster
+Export.image.toAsset({
   image: cliptileMosaictoFloat,
   description: "homogeneity_1011-1040DA_7x7_geometry",
   assetId: 'GLCM_10111040/homogeneity_1011-1040DA_7x7_geometry',
@@ -210,11 +236,13 @@ var cliptileMosaictoFloat = cliptileMosaic.toFloat();
 });
 
 
-// Homogeneity DF
+//     Homogeneity DF
+//     Build a function to calculate homogeneity
 var homogeneityDF = function(objctID) {
   return ee.Image(image3.clip(tilesbuffer_list.get(i)).updateMask(clusters.eq(ee.Number.parse(objctID))).glcmTexture({size: 3}).select('ds10111040df_idm'));
 };
 
+//     Apply the function to each object within the image for intra-class variability
 var cliptile = [];
 var i;
 for (i = 0; i < size; i++) {
@@ -232,6 +260,7 @@ cliptile[i]=ds10111040df_idm;
 // Map.addLayer(ee.Image(cliptile));
 }
 
+//     Mosaic the resulting rasters
 var cliptileMosaic = ee.ImageCollection(cliptile).mosaic();
 // // var cliptileMosaic = cliptileMosaic.addBands(clusters).reduceConnectedComponents(ee.Reducer.mean(), 'clusters', 256).select(['ds10111040df_ent'], ['ds10111040df_ent_mean']);
 // print(cliptileMosaic);
@@ -240,6 +269,7 @@ var cliptileMosaictoFloat = cliptileMosaic.toFloat();
 // // // print(cliptileMosaictoFloat);
 // // Map.addLayer(cliptileMosaictoFloat);
 
+//     Export the resulting texture raster
 Export.image.toAsset({
   image: cliptileMosaictoFloat,
   description: "homogeneity_1011-1040DF_7x7_geometry",
@@ -250,11 +280,13 @@ Export.image.toAsset({
 });
 
 
-// Angular Second Moment DA
+//     Angular Second Moment DA
+//     Build a function to calculate angular second moment
 var angularSecondMomentDA = function(objctID) {
   return ee.Image(image2.updateMask(clusters.eq(ee.Number.parse(objctID))).glcmTexture({size: 3}).select('ds10111040da_asm'));
 };
 
+//     Apply the function to each object within the image for intra-class variability
 var cliptile = [];
 var i;
 for (i = 0; i < size; i++) {
@@ -272,6 +304,7 @@ cliptile[i]=ds10111040da_asm;
 // Map.addLayer(ee.Image(cliptile));
 }
 
+//     Mosaic the resulting rasters
 var cliptileMosaic = ee.ImageCollection(cliptile).mosaic();
 // var cliptileMosaic = cliptileMosaic.addBands(clusters).reduceConnectedComponents(ee.Reducer.mean(), 'clusters', 256).select(['ds10111040da_ent'], ['ds10111040da_ent_mean']);
 // print(cliptileMosaic);
@@ -280,7 +313,8 @@ var cliptileMosaictoFloat = cliptileMosaic.toFloat();
 // print(cliptileMosaictoFloat);
 // Map.addLayer(cliptileMosaictoFloat);
 
- Export.image.toAsset({
+//     Export the resulting texture raster
+Export.image.toAsset({
   image: cliptileMosaictoFloat,
   description: "angularSecondMoment_1011-1040DA_7x7_geometry",
   assetId: "GLCM_10111040/angularSecondMoment_1011-1040DA_7x7_geometry",
@@ -290,12 +324,13 @@ var cliptileMosaictoFloat = cliptileMosaic.toFloat();
 });
 
 
-
-// Angular Second Moment DF
+//     Angular Second Moment DF
+//     Build a function to calculate angular second moment
 var angularSecondMomentDF = function(objctID) {
   return ee.Image(image3.clip(tilesbuffer_list.get(i)).updateMask(clusters.eq(ee.Number.parse(objctID))).glcmTexture({size: 3}).select('ds10111040df_asm'));
 };
 
+//     Apply the function to each object within the image for intra-class variability
 var cliptile = [];
 var i;
 for (i = 0; i < size; i++) {
@@ -313,6 +348,7 @@ cliptile[i]=ds10111040df_asm;
 // Map.addLayer(ee.Image(cliptile));
 }
 
+//     Mosaic the resulting rasters
 var cliptileMosaic = ee.ImageCollection(cliptile).mosaic();
 // var cliptileMosaic = cliptileMosaic.addBands(clusters).reduceConnectedComponents(ee.Reducer.mean(), 'clusters', 256).select(['ds10111040df_ent'], ['ds10111040df_ent_mean']);
 // print(cliptileMosaic);
@@ -321,7 +357,8 @@ var cliptileMosaictoFloat = cliptileMosaic.toFloat();
 // print(cliptileMosaictoFloat);
 // Map.addLayer(cliptileMosaictoFloat);
 
- Export.image.toAsset({
+//     Export the resulting texture raster
+Export.image.toAsset({
   image: cliptileMosaictoFloat,
   description: "angularSecondMoment_1011-1040DF_7x7_geometry",
   assetId: "GLCM_10111040/angularSecondMoment_1011-1040DF_7x7_geometry",
