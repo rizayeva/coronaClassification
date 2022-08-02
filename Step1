@@ -47,7 +47,7 @@ var snic = ee.Algorithms.Image.Segmentation.SNIC({
 //     Select clusters from segmentation results
 var clusters = snic.select('clusters');
 //Map.addLayer(clusters.randomVisualizer(), {}, 'clusters', false)
-// Map.addLayer(snic, {bands: ['da', 'df'], min:0, max:1, gamma: 0.8}, 'means', false);
+//Map.addLayer(snic, {bands: ['da', 'df'], min:0, max:1, gamma: 0.8}, 'means', false);
 
 ///////////// Vectorize the objects
 
