@@ -10,8 +10,8 @@
 ///////////// Exporting training data for labeling
 
 //     Import the Corona imagery
-var image2 = ee.Image('users/rizayeva/corona_2_5m/DS1024-2104DA_1band_LZWcomp_EPSG32638_JPEG');
-var image3 = ee.Image('users/rizayeva/corona_2_5m/DS1024-2104DF_1band_JPEGcomp_EPSG32638_JPEG');
+var image2 = ee.Image('users/rizayeva/corona_2_5m/DS1011-1040DA_2_5m_JPEG_1band_EPSG32638');
+var image3 = ee.Image('users/rizayeva/corona_2_5m/DS1011-1040DF_2_5m_JPEG_1band_EPSG32638');
 
 //     Assign the band names for afterward- ('da') and forward-facing ('df') cameras
 var image2 = image2.select(['b1'],['da']);
