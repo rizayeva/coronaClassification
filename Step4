@@ -17,50 +17,51 @@
     Export the accuracies as csv files and the final classification map
 */
 
-var entropy_DA = ee.Image('users/rizayeva/GLCM/entropy_DA_10242104').toFloat();
-var entropy_DF = ee.Image('users/rizayeva/GLCM/entropy_DF_10242104').toFloat();
-var homogeneity_DA = ee.Image('projects/SILVIS_UW/Afa/GLCM/homogeneity_DA_10242104').toFloat();
-var homogeneity_DF = ee.Image('projects/SILVIS_UW/Afa/GLCM/homogeneity_DF_10242104').toFloat();
-var angularSecondMoment_DA = ee.Image('projects/SILVIS_UW/Afa/GLCM/angularSecondMoment_DA_10242104').toFloat();
-var angularSecondMoment_DF = ee.Image('users/rizayeva/GLCM/angularSecondMoment_DF_10242104').toFloat();
+var entropy_DA = ee.Image('users/rizayeva/GLCM/entropy_DA').toFloat();
+var entropy_DF = ee.Image('users/rizayeva/GLCM/entropy_DF').toFloat();
+var homogeneity_DA = ee.Image('users/rizayeva/GLCM/homogeneity_DA').toFloat();
+var homogeneity_DF = ee.Image('users/rizayeva/GLCM/homogeneity_DF').toFloat();
+var angularSecondMoment_DA = ee.Image('users/rizayeva/GLCM/angularSecondMoment_DA').toFloat();
+var angularSecondMoment_DF = ee.Image('users/rizayeva/GLCM/angularSecondMoment_DF').toFloat();
 
-var imageVisParam = {bands: ['ds10242104da_ent'], min: 0.6920778192348177, max: 4.140394044612628,  gamma: [1]};
+var imageVisParam = {bands: ['ds10111040da_ent'], min: 0.6920778192348177, max: 4.140394044612628,  gamma: [1]};
 Map.addLayer(entropy_DA, imageVisParam, 'entropy_DA', false);
-var imageVisParam = {bands: ['ds10242104df_ent'], min: 3.0209101473712536, max: 3.9960161288948637,  gamma: [1]};
+var imageVisParam = {bands: ['ds10111040df_ent'], min: 3.0209101473712536, max: 3.9960161288948637,  gamma: [1]};
 Map.addLayer(entropy_DF, imageVisParam, 'entropy_DF', false);
-var imageVisParam = {bands: ['ds10242104da_idm'], min: 0.10173501666498017, max: 0.49671797626021486,  gamma: [1]};
+var imageVisParam = {bands: ['ds10111040da_idm'], min: 0.10173501666498017, max: 0.49671797626021486,  gamma: [1]};
 Map.addLayer(homogeneity_DA, imageVisParam, 'homogeneity_DA', false);
-var imageVisParam = {bands: ['ds10242104df_idm'], min: 0.10173501666498017, max: 0.49671797626021486,  gamma: [1]};
+var imageVisParam = {bands: ['ds10111040df_idm'], min: 0.10173501666498017, max: 0.49671797626021486,  gamma: [1]};
 Map.addLayer(homogeneity_DF, imageVisParam, 'homogeneity_DF', false);
-var imageVisParam = {bands: ['ds10242104da_asm'], min: 0.015129123106179802, max: 0.02445575399273777,  gamma: [1]};
+var imageVisParam = {bands: ['ds10111040da_asm'], min: 0.015129123106179802, max: 0.02445575399273777,  gamma: [1]};
 Map.addLayer(angularSecondMoment_DA, imageVisParam, 'angularSecondMoment_DA', false);
-var imageVisParam = {bands: ['ds10242104df_asm'], min: 0.015071922070983398, max: 0.06105865647962591,  gamma: [1]};
+var imageVisParam = {bands: ['ds10111040df_asm'], min: 0.015071922070983398, max: 0.06105865647962591,  gamma: [1]};
 Map.addLayer(angularSecondMoment_DF, imageVisParam, 'angularSecondMoment_DF', false);
 
 var paletteJohanna = ['075b0e', '075b0e', '075b0e', 'ebebeb', '9de64e', 'e2d544', 'ff0000', '3f553c', '0033ff', '383838', '0033ff'];
-var train = ee.FeatureCollection('users/rizayeva/Training_Testing_10242104/Training01172022_1');
-var test = ee.FeatureCollection('users/rizayeva/Training_Testing_10242104/Testing01172022_1');
-var train2 = ee.FeatureCollection('users/rizayeva/Training_Testing_10242104/Training01172022_2');
-var test2 = ee.FeatureCollection('users/rizayeva/Training_Testing_10242104/Testing01172022_2');
-var train3 = ee.FeatureCollection('users/rizayeva/Training_Testing_10242104/Training01172022_3');
-var test3 = ee.FeatureCollection('users/rizayeva/Training_Testing_10242104/Testing01172022_3');
-var train4 = ee.FeatureCollection('users/rizayeva/Training_Testing_10242104/Training01172022_4');
-var test4 = ee.FeatureCollection('users/rizayeva/Training_Testing_10242104/Testing01172022_4');
-var train5 = ee.FeatureCollection('users/rizayeva/Training_Testing_10242104/Training01172022_5');
-var test5 = ee.FeatureCollection('users/rizayeva/Training_Testing_10242104/Testing01172022_5');
-var train6 = ee.FeatureCollection('users/rizayeva/Training_Testing_10242104/Training01172022_6');
-var test6 = ee.FeatureCollection('users/rizayeva/Training_Testing_10242104/Testing01172022_6');
-var train7 = ee.FeatureCollection('users/rizayeva/Training_Testing_10242104/Training01172022_7');
-var test7 = ee.FeatureCollection('users/rizayeva/Training_Testing_10242104/Testing01172022_7');
-var train8 = ee.FeatureCollection('users/rizayeva/Training_Testing_10242104/Training01172022_8');
-var test8 = ee.FeatureCollection('users/rizayeva/Training_Testing_10242104/Testing01172022_8');
-var train9 = ee.FeatureCollection('users/rizayeva/Training_Testing_10242104/Training01172022_9');
-var test9 = ee.FeatureCollection('users/rizayeva/Training_Testing_10242104/Testing01172022_9');
-var train10 = ee.FeatureCollection('users/rizayeva/Training_Testing_10242104/Training01172022_10');
-var test10 = ee.FeatureCollection('users/rizayeva/Training_Testing_10242104/Testing01172022_10');
+var train = ee.FeatureCollection('users/rizayeva/Training_Testing_10111040/Training08112021_1');
+// var test = ee.FeatureCollection('users/rizayeva/Training_Testing_10111040/Testing01172022_1');
+// var train2 = ee.FeatureCollection('users/rizayeva/Training_Testing_10111040/Training01172022_2');
+// var test2 = ee.FeatureCollection('users/rizayeva/Training_Testing_10111040/Testing01172022_2');
+// var train3 = ee.FeatureCollection('users/rizayeva/Training_Testing_10111040/Training01172022_3');
+// var test3 = ee.FeatureCollection('users/rizayeva/Training_Testing_10111040/Testing01172022_3');
+// var train4 = ee.FeatureCollection('users/rizayeva/Training_Testing_10111040/Training01172022_4');
+// var test4 = ee.FeatureCollection('users/rizayeva/Training_Testing_10111040/Testing01172022_4');
+// var train5 = ee.FeatureCollection('users/rizayeva/Training_Testing_10111040/Training01172022_5');
+// var test5 = ee.FeatureCollection('users/rizayeva/Training_Testing_10111040/Testing01172022_5');
+// var train6 = ee.FeatureCollection('users/rizayeva/Training_Testing_10111040/Training01172022_6');
+// var test6 = ee.FeatureCollection('users/rizayeva/Training_Testing_10111040/Testing01172022_6');
+// var train7 = ee.FeatureCollection('users/rizayeva/Training_Testing_10111040/Training01172022_7');
+// var test7 = ee.FeatureCollection('users/rizayeva/Training_Testing_10111040/Testing01172022_7');
+// var train8 = ee.FeatureCollection('users/rizayeva/Training_Testing_10111040/Training01172022_8');
+// var test8 = ee.FeatureCollection('users/rizayeva/Training_Testing_10111040/Testing01172022_8');
+// var train9 = ee.FeatureCollection('users/rizayeva/Training_Testing_10111040/Training01172022_9');
+// var test9 = ee.FeatureCollection('users/rizayeva/Training_Testing_10111040/Testing01172022_9');
+// var train10 = ee.FeatureCollection('users/rizayeva/Training_Testing_10111040/Training01172022_10');
+// var test10 = ee.FeatureCollection('users/rizayeva/Training_Testing_10111040/Testing01172022_10');
 
-var image2 = ee.Image('users/rizayeva/corona_2_5m/DS1024-2104DA_1band_LZWcomp_EPSG32638_JPEG').rename(['ds10111040da']);
-var image3 = ee.Image('users/rizayeva/corona_2_5m/DS1024-2104DF_1band_JPEGcomp_EPSG32638_JPEG').rename(['ds10111040df']);
+
+var image2 = ee.Image('users/rizayeva/corona_2_5m/DS1011-1040DA_2_5m_JPEG_1band_EPSG32638').rename(['ds10111040da']);
+var image3 = ee.Image('users/rizayeva/corona_2_5m/DS1011-1040DF_2_5m_JPEG_1band_EPSG32638').rename(['ds10111040df']);
 Map.addLayer(image2, {min: 0, max: 200}, 'imageDA', false);
 Map.addLayer(image3, {min: 0, max: 200}, 'imageDF', false);
 
@@ -71,7 +72,7 @@ var aspect = ee.Terrain.aspect(elevation);
 // Map.addLayer(slope, {min: 0, max: 360}, 'slope', false);
 // Map.addLayer(aspect, {min: 0, max: 360}, 'aspect', false);
 var imageVisParams = {bands: ['elevation'], min: 1, max: 3445,  gamma: [1.85], opacity: 1};
-var clip = ee.FeatureCollection('users/rizayeva/DS1024-2104');
+var clip = ee.FeatureCollection('users/rizayeva/DS1011-1040');
 var elevation2 = dataset.select('elevation').clip(clip);
 Map.addLayer(elevation2, imageVisParams, 'Elevation', false);
 var slope2 = ee.Terrain.slope(elevation).clip(clip);
@@ -97,7 +98,7 @@ var img = ee.Image(img)
 .divide(255);
 var bandNames = img.bandNames();
 print('Band names: ', bandNames); // ee.List of band names
-Map.addLayer(img, {bands: ["ds10242104df", "ds10242104df", "ds10242104da"], gamma: 0.8}, 'DS1024-2104');
+Map.addLayer(img, {bands: ["ds10111040df", "ds10111040df", "ds10111040da"], gamma: 0.8}, 'DS1011-1040');
 Map.centerObject(img.geometry(), 7);
 
 /////////////Segmentation
@@ -110,15 +111,15 @@ var snic = ee.Algorithms.Image.Segmentation.SNIC({
   connectivity: 4,
   neighborhoodSize:256,
   seeds: seeds
-}).select(['ds10242104da_mean', 'ds10242104df_mean', 'clusters'], ['ds10242104da', 'ds10242104df', 'clusters']);//.reproject({crs: 'EPSG:4326', scale: 18});
+}).select(['ds10111040da_mean', 'ds10111040df_mean', 'clusters'], ['ds10111040da', 'ds10111040df', 'clusters']);//.reproject({crs: 'EPSG:4326', scale: 18});
 // var snicbandNames = snic.bandNames();
 // print('Snic band names: ', snicbandNames); // ee.List of band names
 
 var clusters = snic.select('clusters').reproject({crs: 'EPSG:4326', scale: 18});
 //Map.addLayer(clusters.randomVisualizer(), {}, 'clusters', false)
-Map.addLayer(snic, {bands: ['ds10242104da', 'ds10242104df'/*, 'b1_2', 'b1_3'*/], min:0, max:1, gamma: 0.8}, 'means', false);
+Map.addLayer(snic, {bands: ['ds10111040da', 'ds10111040df'/*, 'b1_2', 'b1_3'*/], min:0, max:1, gamma: 0.8}, 'means', false);
 // Compute per-cluster stdDev.
-var stdDev = img.addBands(clusters).reduceConnectedComponents(ee.Reducer.stdDev(), 'clusters', 1024).select(['ds10242104da', 'ds10242104df'], ['ds10242104da_StdDev', 'ds10242104df_StdDev']).reproject({crs: 'EPSG:4326', scale: 18});
+var stdDev = img.addBands(clusters).reduceConnectedComponents(ee.Reducer.stdDev(), 'clusters', 1024).select(['ds10111040da', 'ds10111040df'], ['ds10111040da_StdDev', 'ds10111040df_StdDev']).reproject({crs: 'EPSG:4326', scale: 18});
 Map.addLayer(stdDev, {min:0, max:0.1}, 'StdDev', false);
 // Area, Perimeter, Width and Height
 var area = ee.Image.pixelArea().addBands(clusters).reduceConnectedComponents(ee.Reducer.sum(), 'clusters', 1024).reproject({crs: 'EPSG:4326', scale: 18});
@@ -151,16 +152,16 @@ var angularSecondMomentDA = angularSecondMoment_DA.addBands(clusters).reduceConn
 Map.addLayer(angularSecondMomentDA, null, 'angularSecondMomentDA', false);
 var angularSecondMomentDF = angularSecondMoment_DF.addBands(clusters).reduceConnectedComponents(ee.Reducer.mean(), 'clusters', 1024).reproject({crs: 'EPSG:4326', scale: 18});
 Map.addLayer(angularSecondMomentDF, null, 'angularSecondMomentDF', false);
-var elevation_10242104 = elevation.addBands(clusters).reduceConnectedComponents(ee.Reducer.mean(), 'clusters', 1024).reproject({crs: 'EPSG:4326', scale: 18});
-Map.addLayer(elevation_10242104, {}, 'elevation_10242104', false);
-var slope_10242104 = slope.addBands(clusters).reduceConnectedComponents(ee.Reducer.mean(), 'clusters', 1024).reproject({crs: 'EPSG:4326', scale: 18});
-Map.addLayer(slope_10242104, {}, 'slope_10242104', false);
-var aspect_10242104 = aspect.addBands(clusters).reduceConnectedComponents(ee.Reducer.mean(), 'clusters', 1024).reproject({crs: 'EPSG:4326', scale: 18});
-Map.addLayer(aspect_10242104, {}, 'aspect_10242104', false);
+var elevation_10111040 = elevation.addBands(clusters).reduceConnectedComponents(ee.Reducer.mean(), 'clusters', 1024).reproject({crs: 'EPSG:4326', scale: 18});
+Map.addLayer(elevation_10111040, {}, 'elevation_10111040', false);
+var slope_10111040 = slope.addBands(clusters).reduceConnectedComponents(ee.Reducer.mean(), 'clusters', 1024).reproject({crs: 'EPSG:4326', scale: 18});
+Map.addLayer(slope_10111040, {}, 'slope_10111040', false);
+var aspect_10111040 = aspect.addBands(clusters).reduceConnectedComponents(ee.Reducer.mean(), 'clusters', 1024).reproject({crs: 'EPSG:4326', scale: 18});
+Map.addLayer(aspect_10111040, {}, 'aspect_10111040', false);
 
 //Classification
 var objectPropertiesImage = ee.Image.cat([
-  snic.select(['ds10242104da', 'ds10242104df']),
+  snic.select(['ds10111040da', 'ds10111040df']),
   stdDev,
   area,
   perimeter,
@@ -173,14 +174,34 @@ var objectPropertiesImage = ee.Image.cat([
   homogeneityDF,
   angularSecondMomentDA,
   angularSecondMomentDF,
-  elevation_10242104,
-  slope_10242104,
-  aspect_10242104
+  elevation_10111040,
+  slope_10111040,
+  aspect_10111040
   ]).float();
 // print (objectPropertiesImage);
 var bandNames = objectPropertiesImage.bandNames();
 print('bandNames', bandNames);
-var bandss = ['ds10242104da', 'ds10242104df', 'ds10242104da_StdDev', 'ds10242104df_StdDev', 'area', 'width', 'height', 'shape', 'ds10242104da_ent', 'ds10242104df_ent', 'ds10242104da_idm', 'ds10242104df_idm', 'ds10242104da_asm', 'ds10242104df_asm', 'slope', 'aspect', 'elevation'];
+var bandss = ['ds10111040da', 'ds10111040df', 'ds10111040da_StdDev', 'ds10111040df_StdDev', 'area', 'width', 'height', 'shape', 'ds10111040da_ent', 'ds10111040df_ent', 'ds10111040da_idm', 'ds10111040df_idm', 'ds10111040da_asm', 'ds10111040df_asm', 'slope', 'aspect', 'elevation'];
+
+var assetIdTR='users/rizayeva/Training10111040'
+var assetIdTE='users/rizayeva/Testing10111040'
+
+// //Make a list that contains all the imagery in the asset directory
+var assetListTR = ee.List(ee.data.getList({'id':assetIdTR}))
+var assetListTE = ee.List(ee.data.getList({'id':assetIdTE}))
+print(assetListTR)
+var n=assetListTR.size().getInfo()
+
+//Generate a feature collection with testing data
+// var listofcollection = function(assetListTR/*, assetListTE*/, size){
+  var classification=ee.ImageCollection([]);
+  for (var i=0; i<2/*n*/; i++){
+    var valueTR=ee.Dictionary(assetListTR.get(i))
+    var imgIDTR=ee.String(valueTR.get('id')).getInfo()
+    var train=ee.FeatureCollection(imgIDTR)
+    print(train)
+    // trainingTR=training.merge(imgs)
+
 
 // Overlay the points on the imagery to get training.
 var training = objectPropertiesImage.sampleRegions({
@@ -199,14 +220,21 @@ var classified1 = objectPropertiesImage.classify(classifier);
 // print('classified', classified); 
 Map.addLayer(classified1, {min: 1, max: 11, palette: paletteJohanna}, 'Classified1', false);
 
-// Export.image.toAsset({
-//   image: classified1.toByte(),//.toFloat(),
-//   description: "classification_objectRF_08122021_1_wDEM",
-//   assetId: "classification_objectRF_08122021_1_wDEM",
-//   scale: 2.5,
-//   region: clip,//train.geometry().bounds(),
-//   maxPixels:1e13,
-// });
+Export.image.toAsset({
+  image: classified1.toByte(),//.toFloat(),
+  description: "classification_objectRF_wDEM" + i,
+  assetId: "classification_objectRF_wDEM" + i,
+  scale: 2.5,
+  region: clip,//train.geometry().bounds(),
+  maxPixels:1e13,
+});
+
+
+  var valueTE=ee.Dictionary(assetListTE.get(i))
+  var imgIDTE=ee.String(valueTE.get('id')).getInfo()
+  var test=ee.FeatureCollection(imgIDTE)
+  // print(test)
+  // testing=testing.merge(imgs)
 
 var validation = objectPropertiesImage.sampleRegions({
   collection: test,
@@ -216,514 +244,21 @@ var validation = objectPropertiesImage.sampleRegions({
 var validated = validation.classify(classifier);
 
 // Get a confusion matrix representing expected accuracy.
-var testAccuracy1 = validated.errorMatrix('Classes', 'classification');
-print('Validation error matrix1_wDEM: ', testAccuracy1);
-print('Validation overall accuracy1_wDEM: ', testAccuracy1.accuracy());
-var Matrix = ee.Feature(null, {matrix: testAccuracy1.array()});
+var testAccuracy = validated.errorMatrix('Classes', 'classification');
+// print('Validation error matrix_wDEM' + i, testAccuracy);
+// print('Validation overall accuracy_wDEM' + i, testAccuracy.accuracy());
+var Matrix = ee.Feature(null, {matrix: testAccuracy.array()});
 // print(Matrix);
-var overall1 = testAccuracy1.accuracy();
-// var overallAccuracy1 = ee.Feature(null, {matrix: overall1.array()});
-// print(overallAccuracy1);
+var overall = testAccuracy.accuracy();
+// var overallAccuracy = ee.Feature(null, {matrix: overall1.array()});
+// print(overallAccuracy);
 
 // Export the FeatureCollection.
 Export.table.toDrive({
   collection: ee.FeatureCollection(Matrix),
-  description:'testAccuracy_object08122021_wDEM',
+  description:'testAccuracy_object08122021_wDEM' + i,
   folder: 'testAccuracy',
   fileFormat: 'csv'
 });
 
-/////////////////////////////////////////////////////////////TRAINING2
-// Overlay the points on the imagery to get training.
-var training = objectPropertiesImage.sampleRegions({
-  collection: train2,
-  properties: ['Classes'],
-  scale: 2.5
-});
-
-//RF classification
-// Train a CART classifier with default parameters
-var classifier = ee.Classifier.smileRandomForest(100).train(training, 'Classes', bandss);
-
-// Classify the image with the same bands used for training.
-var classified2 = objectPropertiesImage.classify(classifier);
-// var classified = classified.addBands(clusters).reduceConnectedComponents(ee.Reducer.mode(), 'clusters', 1024);//.reproject({crs: 'EPSG:4326', scale: 18});
-// print('classified', classified); 
-Map.addLayer(classified2, {min: 1, max: 11, palette: paletteJohanna}, 'Classified2', false);
-
-// Export.image.toAsset({
-//   image: classified2.toByte(),//.toFloat(),
-//   description: "classification_objectRF_08122021_2_wDEM",
-//   assetId: "classification_objectRF_08122021_2_wDEM",
-//   scale: 2.5,
-//   region: clip,//train.geometry().bounds(),
-//   maxPixels:1e13,
-// });
-
-var validation = objectPropertiesImage.sampleRegions({
-  collection: test2,
-  properties: ['Classes'],
-  scale: 2.5
-});
-var validated = validation.classify(classifier);
-
-// Get a confusion matrix representing expected accuracy.
-var testAccuracy2 = validated.errorMatrix('Classes', 'classification');
-print('Validation error matrix2_wDEM: ', testAccuracy2);
-print('Validation overall accuracy2_wDEM: ', testAccuracy2.accuracy());
-var Matrix = ee.Feature(null, {matrix: testAccuracy2.array()});
-// print(Matrix);
-var overall2 = testAccuracy2.accuracy();
-// var overallAccuracy2 = ee.Feature(null, {matrix: overall2.array()});
-// print(overallAccuracy2);
-
-// Export the FeatureCollection.
-Export.table.toDrive({
-  collection: ee.FeatureCollection(Matrix),
-  description:'testAccuracy_object08122021_2_wDEM',
-  folder: 'testAccuracy',
-  fileFormat: 'csv'
-});
-
-/////////////////////////////////////////////////////////////TRAINING3
-// Overlay the points on the imagery to get training.
-var training = objectPropertiesImage.sampleRegions({
-  collection: train3,
-  properties: ['Classes'],
-  scale: 2.5
-});
-
-//RF classification
-// Train a CART classifier with default parameters
-var classifier = ee.Classifier.smileRandomForest(100).train(training, 'Classes', bandss);
-
-// Classify the image with the same bands used for training.
-var classified3 = objectPropertiesImage.classify(classifier);
-// var classified = classified.addBands(clusters).reduceConnectedComponents(ee.Reducer.mode(), 'clusters', 1024);//.reproject({crs: 'EPSG:4326', scale: 18});
-// print('classified', classified); 
-Map.addLayer(classified3, {min: 1, max: 11, palette: paletteJohanna}, 'Classified3', false);
-
-// Export.image.toAsset({
-//   image: classified3.toByte(),//.toFloat(),
-//   description: "classification_objectRF_08122021_3_wDEM",
-//   assetId: "classification_objectRF_08122021_3_wDEM",
-//   scale: 2.5,
-//   region: clip,//train.geometry().bounds(),
-//   maxPixels:1e13,
-// });
-
-var validation = objectPropertiesImage.sampleRegions({
-  collection: test3,
-  properties: ['Classes'],
-  scale: 2.5
-});
-var validated = validation.classify(classifier);
-
-// Get a confusion matrix representing expected accuracy.
-var testAccuracy3 = validated.errorMatrix('Classes', 'classification');
-print('Validation error matrix3_wDEM: ', testAccuracy3);
-print('Validation overall accuracy3_wDEM: ', testAccuracy3.accuracy());
-var Matrix = ee.Feature(null, {matrix: testAccuracy3.array()});
-// print(Matrix);
-var overall3 = testAccuracy3.accuracy();
-// var overallAccuracy3 = ee.Feature(null, {matrix: overall3.array()});
-// print(overallAccuracy3);
-
-// Export the FeatureCollection.
-Export.table.toDrive({
-  collection: ee.FeatureCollection(Matrix),
-  description:'testAccuracy_object08122021_3_wDEM',
-  folder: 'testAccuracy',
-  fileFormat: 'csv'
-});
-
-
-//////////////////////////////////////TRAINING4
-// Overlay the points on the imagery to get training.
-var training = objectPropertiesImage.sampleRegions({
-  collection: train4,
-  properties: ['Classes'],
-  scale: 2.5
-});
-
-//RF classification
-// Train a CART classifier with default parameters
-var classifier = ee.Classifier.smileRandomForest(100).train(training, 'Classes', bandss);
-
-// Classify the image with the same bands used for training.
-var classified4 = objectPropertiesImage.classify(classifier);
-// var classified = classified.addBands(clusters).reduceConnectedComponents(ee.Reducer.mode(), 'clusters', 1024);//.reproject({crs: 'EPSG:4326', scale: 18});
-// print('classified', classified); 
-Map.addLayer(classified4, {min: 1, max: 11, palette: paletteJohanna}, 'Classified4', false);
-
-// Export.image.toAsset({
-//   image: classified4.toByte(),//.toFloat(),
-//   description: "classification_objectRF_08122021_4_wDEM",
-//   assetId: "classification_objectRF_08122021_4_wDEM",
-//   scale: 2.5,
-//   region: clip,//train.geometry().bounds(),
-//   maxPixels:1e13,
-// });
-
-var validation = objectPropertiesImage.sampleRegions({
-  collection: test4,
-  properties: ['Classes'],
-  scale: 2.5
-});
-var validated = validation.classify(classifier);
-
-// Get a confusion matrix representing expected accuracy.
-var testAccuracy4 = validated.errorMatrix('Classes', 'classification');
-print('Validation error matrix4_wDEM: ', testAccuracy4);
-print('Validation overall accuracy4_wDEM: ', testAccuracy4.accuracy());
-var Matrix = ee.Feature(null, {matrix: testAccuracy4.array()});
-// print(Matrix);
-var overall4 = testAccuracy4.accuracy();
-// var overallAccuracy4 = ee.Feature(null, {matrix: overall4.array()});
-// print(overallAccuracy4);
-
-// Export the FeatureCollection.
-Export.table.toDrive({
-  collection: ee.FeatureCollection(Matrix),
-  description:'testAccuracy_object08122021_4_wDEM',
-  folder: 'testAccuracy',
-  fileFormat: 'csv'
-});
-
-
-//////////////////////////////////////TRAINING5
-// Overlay the points on the imagery to get training.
-var training = objectPropertiesImage.sampleRegions({
-  collection: train5,
-  properties: ['Classes'],
-  scale: 2.5
-});
-
-//RF classification
-// Train a CART classifier with default parameters
-var classifier = ee.Classifier.smileRandomForest(100).train(training, 'Classes', bandss);
-
-// Classify the image with the same bands used for training.
-var classified5 = objectPropertiesImage.classify(classifier);
-// var classified = classified.addBands(clusters).reduceConnectedComponents(ee.Reducer.mode(), 'clusters', 1024);//.reproject({crs: 'EPSG:4326', scale: 18});
-// print('classified', classified); 
-Map.addLayer(classified5, {min: 1, max: 11, palette: paletteJohanna}, 'Classified5', false);
-
-// Export.image.toAsset({
-//   image: classified5.toByte(),//.toFloat(),
-//   description: "classification_objectRF_08122021_5_wDEM",
-//   assetId: "classification_objectRF_08122021_5_wDEM",
-//   scale: 2.5,
-//   region: clip,//train.geometry().bounds(),
-//   maxPixels:1e13,
-// });
-
-var validation = objectPropertiesImage.sampleRegions({
-  collection: test5,
-  properties: ['Classes'],
-  scale: 2.5
-});
-var validated = validation.classify(classifier);
-
-// Get a confusion matrix representing expected accuracy.
-var testAccuracy5 = validated.errorMatrix('Classes', 'classification');
-print('Validation error matrix5_wDEM: ', testAccuracy5);
-print('Validation overall accuracy5_wDEM: ', testAccuracy5.accuracy());
-var Matrix = ee.Feature(null, {matrix: testAccuracy5.array()});
-// print(Matrix);
-var overall5 = testAccuracy5.accuracy();
-// var overallAccuracy5 = ee.Feature(null, {matrix: overall5.array()});
-// print(overallAccuracy5);
-
-// Export the FeatureCollection.
-Export.table.toDrive({
-  collection: ee.FeatureCollection(Matrix),
-  description:'testAccuracy_object08122021_5_wDEM',
-  folder: 'testAccuracy',
-  fileFormat: 'csv'
-});
-
-
-//////////////////////////////////////TRAINING6
-// Overlay the points on the imagery to get training.
-var training = objectPropertiesImage.sampleRegions({
-  collection: train6,
-  properties: ['Classes'],
-  scale: 2.5
-});
-
-//RF classification
-// Train a CART classifier with default parameters
-var classifier = ee.Classifier.smileRandomForest(100).train(training, 'Classes', bandss);
-
-// Classify the image with the same bands used for training.
-var classified6 = objectPropertiesImage.classify(classifier);
-// var classified = classified.addBands(clusters).reduceConnectedComponents(ee.Reducer.mode(), 'clusters', 1024);//.reproject({crs: 'EPSG:4326', scale: 18});
-// print('classified', classified); 
-Map.addLayer(classified6, {min: 1, max: 11, palette: paletteJohanna}, 'Classified6', false);
-
-// Export.image.toAsset({
-//   image: classified6.toByte(),//.toFloat(),
-//   description: "classification_objectRF_08122021_6_wDEM",
-//   assetId: "classification_objectRF_08122021_6_wDEM",
-//   scale: 2.5,
-//   region: clip,//train.geometry().bounds(),
-//   maxPixels:1e13,
-// });
-
-var validation = objectPropertiesImage.sampleRegions({
-  collection: test6,
-  properties: ['Classes'],
-  scale: 2.5
-});
-var validated = validation.classify(classifier);
-
-// Get a confusion matrix representing expected accuracy.
-var testAccuracy6 = validated.errorMatrix('Classes', 'classification');
-print('Validation error matrix6_wDEM: ', testAccuracy6);
-print('Validation overall accuracy6_wDEM: ', testAccuracy6.accuracy());
-var Matrix = ee.Feature(null, {matrix: testAccuracy6.array()});
-// print(Matrix);
-var overall6 = testAccuracy6.accuracy();
-// var overallAccuracy6 = ee.Feature(null, {matrix: overall6.array()});
-// print(overallAccuracy6);
-
-// Export the FeatureCollection.
-Export.table.toDrive({
-  collection: ee.FeatureCollection(Matrix),
-  description:'testAccuracy_object08122021_6_wDEM',
-  folder: 'testAccuracy',
-  fileFormat: 'csv'
-});
-
-
-//////////////////////////////////////TRAINING7
-// Overlay the points on the imagery to get training.
-var training = objectPropertiesImage.sampleRegions({
-  collection: train7,
-  properties: ['Classes'],
-  scale: 2.5
-});
-
-//RF classification
-// Train a CART classifier with default parameters
-var classifier = ee.Classifier.smileRandomForest(100).train(training, 'Classes', bandss);
-
-// Classify the image with the same bands used for training.
-var classified7 = objectPropertiesImage.classify(classifier);
-// var classified = classified.addBands(clusters).reduceConnectedComponents(ee.Reducer.mode(), 'clusters', 1024);//.reproject({crs: 'EPSG:4326', scale: 18});
-// print('classified', classified); 
-Map.addLayer(classified7, {min: 1, max: 11, palette: paletteJohanna}, 'Classified7', false);
-
-// Export.image.toAsset({
-//   image: classified7.toByte(),//.toFloat(),
-//   description: "classification_objectRF_08122021_7_wDEM",
-//   assetId: "classification_objectRF_08122021_7_wDEM",
-//   scale: 2.5,
-//   region: clip,//train.geometry().bounds(),
-//   maxPixels:1e13,
-// });
-
-var validation = objectPropertiesImage.sampleRegions({
-  collection: test7,
-  properties: ['Classes'],
-  scale: 2.5
-});
-var validated = validation.classify(classifier);
-
-// Get a confusion matrix representing expected accuracy.
-var testAccuracy7 = validated.errorMatrix('Classes', 'classification');
-print('Validation error matrix7_wDEM: ', testAccuracy7);
-print('Validation overall accuracy7_wDEM: ', testAccuracy7.accuracy());
-var Matrix = ee.Feature(null, {matrix: testAccuracy7.array()});
-// print(Matrix);
-var overall7 = testAccuracy7.accuracy();
-// var overallAccuracy7 = ee.Feature(null, {matrix: overall7.array()});
-// print(overallAccuracy7);
-
-// Export the FeatureCollection.
-Export.table.toDrive({
-  collection: ee.FeatureCollection(Matrix),
-  description:'testAccuracy_object08122021_7_wDEM',
-  folder: 'testAccuracy',
-  fileFormat: 'csv'
-});
-
-
-//////////////////////////////////////TRAINING8
-// Overlay the points on the imagery to get training.
-var training = objectPropertiesImage.sampleRegions({
-  collection: train8,
-  properties: ['Classes'],
-  scale: 2.5
-});
-
-//RF classification
-// Train a CART classifier with default parameters
-var classifier = ee.Classifier.smileRandomForest(100).train(training, 'Classes', bandss);
-
-// Classify the image with the same bands used for training.
-var classified8 = objectPropertiesImage.classify(classifier);
-// var classified = classified.addBands(clusters).reduceConnectedComponents(ee.Reducer.mode(), 'clusters', 1024);//.reproject({crs: 'EPSG:4326', scale: 18});
-// print('classified', classified); 
-Map.addLayer(classified8, {min: 1, max: 11, palette: paletteJohanna}, 'Classified8', false);
-
-// Export.image.toAsset({
-//   image: classified8.toByte(),//.toFloat(),
-//   description: "classification_objectRF_08122021_8_wDEM",
-//   assetId: "classification_objectRF_08122021_8_wDEM",
-//   scale: 2.5,
-//   region: clip,//train.geometry().bounds(),
-//   maxPixels:1e13,
-// });
-
-var validation = objectPropertiesImage.sampleRegions({
-  collection: test8,
-  properties: ['Classes'],
-  scale: 2.5
-});
-var validated = validation.classify(classifier);
-
-// Get a confusion matrix representing expected accuracy.
-var testAccuracy8 = validated.errorMatrix('Classes', 'classification');
-print('Validation error matrix8_wDEM: ', testAccuracy8);
-print('Validation overall accuracy8_wDEM: ', testAccuracy8.accuracy());
-var Matrix = ee.Feature(null, {matrix: testAccuracy8.array()});
-// print(Matrix);
-var overall8 = testAccuracy8.accuracy();
-// var overallAccuracy8 = ee.Feature(null, {matrix: overall8.array()});
-// print(overallAccuracy8);
-
-// Export the FeatureCollection.
-Export.table.toDrive({
-  collection: ee.FeatureCollection(Matrix),
-  description:'testAccuracy_object08122021_8_wDEM',
-  folder: 'testAccuracy',
-  fileFormat: 'csv'
-});
-
-
-//////////////////////////////////////TRAINING9
-// Overlay the points on the imagery to get training.
-var training = objectPropertiesImage.sampleRegions({
-  collection: train9,
-  properties: ['Classes'],
-  scale: 2.5
-});
-
-//RF classification
-// Train a CART classifier with default parameters
-var classifier = ee.Classifier.smileRandomForest(100).train(training, 'Classes', bandss);
-
-// Classify the image with the same bands used for training.
-var classified9 = objectPropertiesImage.classify(classifier);
-// var classified = classified.addBands(clusters).reduceConnectedComponents(ee.Reducer.mode(), 'clusters', 1024);//.reproject({crs: 'EPSG:4326', scale: 18});
-// print('classified', classified); 
-Map.addLayer(classified9, {min: 1, max: 11, palette: paletteJohanna}, 'Classified9', false);
-
-// Export.image.toAsset({
-//   image: classified9.toByte(),//.toFloat(),
-//   description: "classification_objectRF_08122021_9_wDEM",
-//   assetId: "classification_objectRF_08122021_9_wDEM",
-//   scale: 2.5,
-//   region: clip,//train.geometry().bounds(),
-//   maxPixels:1e13,
-// });
-
-var validation = objectPropertiesImage.sampleRegions({
-  collection: test9,
-  properties: ['Classes'],
-  scale: 2.5
-});
-var validated = validation.classify(classifier);
-
-// Get a confusion matrix representing expected accuracy.
-var testAccuracy9 = validated.errorMatrix('Classes', 'classification');
-print('Validation error matrix9_wDEM: ', testAccuracy9);
-print('Validation overall accuracy9_wDEM: ', testAccuracy9.accuracy());
-var Matrix = ee.Feature(null, {matrix: testAccuracy9.array()});
-// print(Matrix);
-var overall9 = testAccuracy9.accuracy();
-// var overallAccuracy9 = ee.Feature(null, {matrix: overall9.array()});
-// print(overallAccuracy9);
-
-// Export the FeatureCollection.
-Export.table.toDrive({
-  collection: ee.FeatureCollection(Matrix),
-  description:'testAccuracy_object08122021_9_wDEM',
-  folder: 'testAccuracy',
-  fileFormat: 'csv'
-});
-
-
-//////////////////////////////////////TRAINING10
-// Overlay the points on the imagery to get training.
-var training = objectPropertiesImage.sampleRegions({
-  collection: train10,
-  properties: ['Classes'],
-  scale: 2.5
-});
-
-//RF classification
-// Train a CART classifier with default parameters
-var classifier = ee.Classifier.smileRandomForest(100).train(training, 'Classes', bandss);
-
-// Classify the image with the same bands used for training.
-var classified10 = objectPropertiesImage.classify(classifier);
-// var classified = classified.addBands(clusters).reduceConnectedComponents(ee.Reducer.mode(), 'clusters', 1024);//.reproject({crs: 'EPSG:4326', scale: 18});
-// print('classified', classified); 
-Map.addLayer(classified10, {min: 1, max: 11, palette: paletteJohanna}, 'Classified10', false);
-
-// Export.image.toAsset({
-//   image: classified10.toByte(),//.toFloat(),
-//   description: "classification_objectRF_08122021_10_wDEM",
-//   assetId: "classification_objectRF_08122021_10_wDEM",
-//   scale: 2.5,
-//   region: clip,//train.geometry().bounds(),
-//   maxPixels:1e13,
-// });
-
-var validation = objectPropertiesImage.sampleRegions({
-  collection: test10,
-  properties: ['Classes'],
-  scale: 2.5
-});
-var validated = validation.classify(classifier);
-
-// Get a confusion matrix representing expected accuracy.
-var testAccuracy10 = validated.errorMatrix('Classes', 'classification');
-print('Validation error matrix10_wDEM: ', testAccuracy10);
-print('Validation overall accuracy10_wDEM: ', testAccuracy10.accuracy());
-var Matrix = ee.Feature(null, {matrix: testAccuracy10.array()});
-// print(Matrix);
-var overall10 = testAccuracy10.accuracy();
-// var overallAccuracy10 = ee.Feature(null, {matrix: overall10.array()});
-// print(overallAccuracy10);
-
-// Export the FeatureCollection.
-Export.table.toDrive({
-  collection: ee.FeatureCollection(Matrix),
-  description:'testAccuracy_object08122021_10_wDEM',
-  folder: 'testAccuracy',
-  fileFormat: 'csv'
-});
-
-///////////Overall map
-var classifications = ee.ImageCollection.fromImages([classified1, classified2, classified3, classified4, classified5, classified6, classified7, classified8, classified9, classified10]);
-var bestClassificationObj = classifications.mode();
-// Map.addLayer(bestClassificationObj);
-var paletteJohanna2 = ['075b0e',  '075b0e', '075b0e', 'ebebeb', '9de64e', 'e2d544', 'ff0000', '3f553c', '0033ff', 'ffffff', '88cdf6'];
-Map.addLayer(bestClassificationObj.toByte(), {min: 1, max: 11, palette: paletteJohanna2}, "Best_obj", false);
-Export.image.toDrive({
-  image: bestClassificationObj.toByte(),//.toFloat(),
-  description: "bestClassificationObj_objectRF08122021_wDEM",
-  folder: "objectBasedClassifications",
-  scale: 2.5,
-  region: clip,//train.geometry().bounds(),
-  maxPixels:1e13,
-});
-
-var testAccuracies = ee.List([]).add(overall1).add(overall2).add(overall3).add(overall4).add(overall5).add(overall6).add(overall7).add(overall8).add(overall9).add(overall10);
-// print(testAccuracies);
-var overallAccuracy = testAccuracies.reduce(ee.Reducer.mean());
-print('Overall accuracy', overallAccuracy);
+  }
