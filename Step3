@@ -24,28 +24,28 @@ Map.addLayer(geometry);
 
 //     Angular Second Moment for backward-facing camera
 var imageVisParam = {bands: ['ds10111040da_asm'], min: 0.015071922070983398, max: 0.06105865647962591,  gamma: [1]};
-var assetId='users/rizayeva/GLCM_ASM_DA_10111040'
+var assetId='users/rizayeva/GLCM_ASM_DA_10111040';
 
 //     Make a list that contains all the imagery in the asset directory
-var assetList = ee.List(ee.data.getList({'id':assetId}))
-// print(assetList)
-var n=assetList.size().getInfo()
+var assetList = ee.List(ee.data.getList({'id':assetId}));
+// print(assetList);
+var n=assetList.size().getInfo();
 
-//     Generate a imagery collection that contains all the land cover maps on the list
+//     Generate an imagery collection that contains all the land cover maps on the list
 var listocollection = function(assetList,size){
   var col=ee.ImageCollection([]);
   for (var i=0; i<size; i++){
-    var value=ee.Dictionary(assetList.get(i))
-    var imgID=ee.String(value.get('id')).getInfo()
-    var imgs=ee.Image(imgID)
-    col=col.merge(imgs)
+    var value=ee.Dictionary(assetList.get(i));
+    var imgID=ee.String(value.get('id')).getInfo();
+    var imgs=ee.Image(imgID);
+    col=col.merge(imgs);
   }
   return col;
-}
+};
 
 //    Check the number of rasters in collection
 var collection=listocollection(assetList,n);
-print('AngularSecondMomentDA', collection)
+print('AngularSecondMomentDA', collection);
 
 //     Mosaic the rasters within collection
 var angularSecondMoment_DA = collection.mosaic();
@@ -64,35 +64,38 @@ Export.image.toAsset({
 });
 
 
-//ASM_DF
+//     Angular Second Moment for forwaqrd-facing camera
 var imageVisParam = {bands: ['ds10111040df_asm'], min: 0.015071922070983398, max: 0.06105865647962591,  gamma: [1]};
-var assetId='users/rizayeva/GLCM_ASM_DF_10111040'
+var assetId='users/rizayeva/GLCM_ASM_DF_10111040';
 
-// //Make a list that contains all the imagery in the asset directory
-var assetList = ee.List(ee.data.getList({'id':assetId}))
-// print(assetList)
-var n=assetList.size().getInfo()
+//     Make a list that contains all the imagery in the asset directory
+var assetList = ee.List(ee.data.getList({'id':assetId}));
+// print(assetList);
+var n=assetList.size().getInfo();
 
-//Generate a imagery collection that contains all the land cover maps on the list
+//     Generate an imagery collection that contains all the land cover maps on the list
 var listocollection = function(assetList,size){
   var col=ee.ImageCollection([]);
   for (var i=0; i<size; i++){
-    var value=ee.Dictionary(assetList.get(i))
-    var imgID=ee.String(value.get('id')).getInfo()
-    var imgs=ee.Image(imgID)
-    col=col.merge(imgs)
+    var value=ee.Dictionary(assetList.get(i));
+    var imgID=ee.String(value.get('id')).getInfo();
+    var imgs=ee.Image(imgID);
+    col=col.merge(imgs);
   }
   return col;
-}
+};
 
+//    Check the number of rasters in collection
 var collection=listocollection(assetList,n);
-print('AngularSecondMomentDF', collection)
+print('AngularSecondMomentDF', collection);
 
+//     Mosaic the rasters within collection
 var angularSecondMoment_DF = collection.mosaic();
 print(angularSecondMoment_DF);
 // Map.addLayer(angularSecondMoment_DF, imageVisParam, 'angularSecondMoment_DF');
 Map.addLayer(angularSecondMoment_DF, imageVisParam, 'angularSecondMoment_DF');
 
+//     Export the final texture metric file
 Export.image.toAsset({
   image: angularSecondMoment_DF,
   description: "angularSecondMoment_DF_10111040",
@@ -102,37 +105,39 @@ Export.image.toAsset({
   maxPixels:1e13,
 });
 
-//imageVisParam
 
-//ENT_DA
+//     Entropy for backward-facing camera
 var imageVisParam = {bands: ['ds10111040da_ent'], min: 3.0209101473712536, max: 3.9960161288948637,  gamma: [1]};
-var assetId='users/rizayeva/GLCM_ENT_DA_10111040'
+var assetId='users/rizayeva/GLCM_ENT_DA_10111040';
 
-// //Make a list that contains all the imagery in the asset directory
-var assetList = ee.List(ee.data.getList({'id':assetId}))
-// print(assetList)
-var n=assetList.size().getInfo()
+//     Make a list that contains all the imagery in the asset directory
+var assetList = ee.List(ee.data.getList({'id':assetId}));
+// print(assetList);
+var n=assetList.size().getInfo();
 
-//Generate a imagery collection that contains all the land cover maps on the list
+//     Generate an imagery collection that contains all the land cover maps on the list
 var listocollection = function(assetList,size){
   var col=ee.ImageCollection([]);
   for (var i=0; i<size; i++){
-    var value=ee.Dictionary(assetList.get(i))
-    var imgID=ee.String(value.get('id')).getInfo()
-    var imgs=ee.Image(imgID)
-    col=col.merge(imgs)
+    var value=ee.Dictionary(assetList.get(i));
+    var imgID=ee.String(value.get('id')).getInfo();
+    var imgs=ee.Image(imgID);
+    col=col.merge(imgs);
   }
   return col;
-}
+};
 
+//    Check the number of rasters in collection
 var collection=listocollection(assetList,n);
-print('EntropyDA', collection)
+print('EntropyDA', collection);
 
+//     Mosaic the rasters within collection
 var entropy_DA = collection.mosaic();
 print(entropy_DA);
 // Map.addLayer(entropy_DA, imageVisParam, 'entropy_DA');
 Map.addLayer(entropy_DA, imageVisParam, 'entropy_DA');
 
+//     Export the final texture metric file
 Export.image.toAsset({
   image: entropy_DA,
   description: "entropy_DA_10111040",
@@ -143,35 +148,38 @@ Export.image.toAsset({
 });
 
 
-//ENT_DF
+//     Entropy for forward-facing camera
 var imageVisParam = {bands: ['ds10111040df_ent'], min: 3.0209101473712536, max: 3.9960161288948637,  gamma: [1]};
-var assetId='users/rizayeva/GLCM_ENT_DF_10111040'
+var assetId='users/rizayeva/GLCM_ENT_DF_10111040';
 
-// //Make a list that contains all the imagery in the asset directory
-var assetList = ee.List(ee.data.getList({'id':assetId}))
-// print(assetList)
-var n=assetList.size().getInfo()
+//     Make a list that contains all the imagery in the asset directory
+var assetList = ee.List(ee.data.getList({'id':assetId}));
+// print(assetList);
+var n=assetList.size().getInfo();
 
-//Generate a imagery collection that contains all the land cover maps on the list
+//     Generate an imagery collection that contains all the land cover maps on the list
 var listocollection = function(assetList,size){
   var col=ee.ImageCollection([]);
   for (var i=0; i<size; i++){
-    var value=ee.Dictionary(assetList.get(i))
-    var imgID=ee.String(value.get('id')).getInfo()
-    var imgs=ee.Image(imgID)
-    col=col.merge(imgs)
+    var value=ee.Dictionary(assetList.get(i));
+    var imgID=ee.String(value.get('id')).getInfo();
+    var imgs=ee.Image(imgID);
+    col=col.merge(imgs);
   }
   return col;
-}
+};
 
+//    Check the number of rasters in collection
 var collection=listocollection(assetList,n);
-print('EntropyDF', collection)
+print('EntropyDF', collection);
 
+//     Mosaic the rasters within collection
 var entropy_DF = collection.mosaic();
 print(entropy_DF);
 // Map.addLayer(entropy_DF, imageVisParam, 'entropy_DF');
 Map.addLayer(entropy_DF, imageVisParam, 'entropy_DF');
 
+//     Export the final texture metric file
 Export.image.toAsset({
   image: entropy_DF,
   description: "entropy_DF_10111040",
@@ -182,35 +190,38 @@ Export.image.toAsset({
 });
 
 
-//HOM_DA
+//     Homogeneity for backward-facing camera
 var imageVisParam = {bands: ['ds10111040da_idm'], min: 0.10173501666498017, max: 0.49671797626021486,  gamma: [1]};
-var assetId='users/rizayeva/GLCM_HOM_DA_10111040'
+var assetId='users/rizayeva/GLCM_HOM_DA_10111040';
 
-// //Make a list that contains all the imagery in the asset directory
-var assetList = ee.List(ee.data.getList({'id':assetId}))
-// print(assetList)
-var n=assetList.size().getInfo()
+//     Make a list that contains all the imagery in the asset directory
+var assetList = ee.List(ee.data.getList({'id':assetId}));
+// print(assetList);
+var n=assetList.size().getInfo();
 
-//Generate a imagery collection that contains all the land cover maps on the list
+//     Generate an imagery collection that contains all the land cover maps on the list
 var listocollection = function(assetList,size){
   var col=ee.ImageCollection([]);
   for (var i=0; i<size; i++){
-    var value=ee.Dictionary(assetList.get(i))
-    var imgID=ee.String(value.get('id')).getInfo()
-    var imgs=ee.Image(imgID)
-    col=col.merge(imgs)
+    var value=ee.Dictionary(assetList.get(i));
+    var imgID=ee.String(value.get('id')).getInfo();
+    var imgs=ee.Image(imgID);
+    col=col.merge(imgs);
   }
   return col;
-}
+};
 
+//    Check the number of rasters in collection
 var collection=listocollection(assetList,n);
-print('HomogeneityDA', collection)
+print('HomogeneityDA', collection);
 
+//     Mosaic the rasters within collection
 var homogeneity_DA = collection.mosaic();
 print(homogeneity_DA);
 // Map.addLayer(homogeneity_DA, imageVisParam, 'homogeneity_DA');
 Map.addLayer(homogeneity_DA, imageVisParam, 'homogeneity_DA');
 
+//     Export the final texture metric file
 Export.image.toAsset({
   image: homogeneity_DA,
   description: "homogeneity_DA_10111040",
@@ -221,35 +232,38 @@ Export.image.toAsset({
 });
 
 
-//HOM_DF
+//     Homogeneity for forward-facing camera
 var imageVisParam = {bands: ['ds10111040df_idm'], min: 0.10173501666498017, max: 0.49671797626021486,  gamma: [1]};
-var assetId='users/rizayeva/GLCM_HOM_DF_10111040'
-var n=assetList.size().getInfo()
+var assetId='users/rizayeva/GLCM_HOM_DF_10111040';
+var n=assetList.size().getInfo();
 
-// //Make a list that contains all the imagery in the asset directory
-var assetList = ee.List(ee.data.getList({'id':assetId}))
-// print(assetList)
+//      Make a list that contains all the imagery in the asset directory
+var assetList = ee.List(ee.data.getList({'id':assetId}));
+// print(assetList);
 
-//Generate a imagery collection that contains all the land cover maps on the list
+//     Generate an imagery collection that contains all the land cover maps on the list
 var listocollection = function(assetList,size){
   var col=ee.ImageCollection([]);
   for (var i=0; i<size; i++){
-    var value=ee.Dictionary(assetList.get(i))
-    var imgID=ee.String(value.get('id')).getInfo()
-    var imgs=ee.Image(imgID)
-    col=col.merge(imgs)
+    var value=ee.Dictionary(assetList.get(i));
+    var imgID=ee.String(value.get('id')).getInfo();
+    var imgs=ee.Image(imgID);
+    col=col.merge(imgs);
   }
   return col;
-}
+};
 
+//    Check the number of rasters in collection
 var collection=listocollection(assetList,n);
-print('HomogeneityDF', collection)
+print('HomogeneityDF', collection);
 
+//     Mosaic the rasters within collection
 var homogeneity_DF = collection.mosaic();
 print(homogeneity_DF);
 // Map.addLayer(homogeneity_DF, imageVisParam, 'homogeneity_DF');
 Map.addLayer(homogeneity_DF, imageVisParam, 'homogeneity_DF');
 
+//     Export the final texture metric file
 Export.image.toAsset({
   image: homogeneity_DF,
   description: "homogeneity_DF_10111040",
