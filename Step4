@@ -62,14 +62,6 @@ Map.addLayer(aspect2, {}, 'aspect2', false);
 var sinImage = aspect2.divide(180).multiply(Math.PI).sin();
 Map.addLayer(sinImage, {min: -1, max: 1}, 'sin', false);
 
-// Export.image.toAsset({
-//   image: elevation2,//.toFloat(),
-//   description: "Elevation",
-//   assetId: "Elevation",
-//   scale: 30,
-//   region: clip,
-//   maxPixels:1e13,
-// });
 
 var img = ee.Image.cat([image2, image3]);
 print('img', img);
