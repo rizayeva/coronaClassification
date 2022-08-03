@@ -37,38 +37,27 @@ Map.addLayer(angularSecondMoment_DA, imageVisParam, 'angularSecondMoment_DA', fa
 var imageVisParam = {bands: ['ds10111040df_asm'], min: 0.015071922070983398, max: 0.06105865647962591,  gamma: [1]};
 Map.addLayer(angularSecondMoment_DF, imageVisParam, 'angularSecondMoment_DF', false);
 
-var paletteJohanna = ['075b0e', '075b0e', '075b0e', 'ebebeb', '9de64e', 'e2d544', 'ff0000', '3f553c', '0033ff', '383838', '0033ff'];
-
+var palette = ['075b0e',  '075b0e', '075b0e', 'ebebeb', '9de64e', 'e2d544', 'ff0000', '3f553c', '0033ff', 'ffffff', '88cdf6'];
 var image2 = ee.Image('users/rizayeva/corona_2_5m/DS1011-1040DA_2_5m_JPEG_1band_EPSG32638').rename(['ds10111040da']);
 var image3 = ee.Image('users/rizayeva/corona_2_5m/DS1011-1040DF_2_5m_JPEG_1band_EPSG32638').rename(['ds10111040df']);
 Map.addLayer(image2, {min: 0, max: 200}, 'imageDA', false);
 Map.addLayer(image3, {min: 0, max: 200}, 'imageDF', false);
 
-var dataset = ee.Image('USGS/SRTMGL1_003');
-var elevation = dataset.select('elevation');
-var slope = ee.Terrain.slope(elevation);
-var aspect = ee.Terrain.aspect(elevation);
-// Map.addLayer(slope, {min: 0, max: 360}, 'slope', false);
-// Map.addLayer(aspect, {min: 0, max: 360}, 'aspect', false);
-var imageVisParams = {bands: ['elevation'], min: 1, max: 3445,  gamma: [1.85], opacity: 1};
 var clip = ee.FeatureCollection('users/rizayeva/DS1011-1040');
-var elevation2 = dataset.select('elevation').clip(clip);
-Map.addLayer(elevation2, imageVisParams, 'Elevation', false);
-var slope2 = ee.Terrain.slope(elevation).clip(clip);
-Map.addLayer(slope2, {}, 'slope2', false);
-var aspect2 = ee.Terrain.aspect(elevation).clip(clip);
-Map.addLayer(aspect2, {}, 'aspect2', false);
-// Convert to radians, compute the sin of the aspect.
-var sinImage = aspect2.divide(180).multiply(Math.PI).sin();
-Map.addLayer(sinImage, {min: -1, max: 1}, 'sin', false);
-
+var dataset = ee.Image('USGS/SRTMGL1_003');
+var elevation = dataset.select('elevation').clip(clip);
+var slope = ee.Terrain.slope(elevation).clip(clip);
+var aspect = ee.Terrain.aspect(elevation).clip(clip);
+var imageVisParams = {bands: ['elevation'], min: 1, max: 3445,  gamma: [1.85], opacity: 1};
+Map.addLayer(elevation, imageVisParams, 'Elevation', false);
+Map.addLayer(slope, {}, 'slope', false);
+Map.addLayer(aspect, {}, 'aspect', false);
 
 var img = ee.Image.cat([image2, image3]);
-print('img', img);
-var img = ee.Image(img)
-.divide(255);
+// print('img', img);
+var img = ee.Image(img).divide(255);
 var bandNames = img.bandNames();
-print('Band names: ', bandNames); // ee.List of band names
+print('img band names', bandNames); // ee.List of band names
 Map.addLayer(img, {bands: ["ds10111040df", "ds10111040df", "ds10111040da"], gamma: 0.8}, 'DS1011-1040');
 Map.centerObject(img.geometry(), 7);
 
@@ -151,28 +140,29 @@ var objectPropertiesImage = ee.Image.cat([
   ]).float();
 // print (objectPropertiesImage);
 var bandNames = objectPropertiesImage.bandNames();
-print('bandNames', bandNames);
+print('objectPropertiesImage bandNames', bandNames);
 var bandss = ['ds10111040da', 'ds10111040df', 'ds10111040da_StdDev', 'ds10111040df_StdDev', 'area', 'width', 'height', 'shape', 'ds10111040da_ent', 'ds10111040df_ent', 'ds10111040da_idm', 'ds10111040df_idm', 'ds10111040da_asm', 'ds10111040df_asm', 'slope', 'aspect', 'elevation'];
 
-var assetIdTR='users/rizayeva/Training10111040'
-var assetIdTE='users/rizayeva/Testing10111040'
+var assetIdTR='users/rizayeva/Training10111040';
+var assetIdTE='users/rizayeva/Testing10111040';
 
 // //Make a list that contains all the imagery in the asset directory
-var assetListTR = ee.List(ee.data.getList({'id':assetIdTR}))
-var assetListTE = ee.List(ee.data.getList({'id':assetIdTE}))
-print(assetListTR)
-var n=assetListTR.size().getInfo()
+var assetListTR = ee.List(ee.data.getList({'id':assetIdTR}));
+var assetListTE = ee.List(ee.data.getList({'id':assetIdTE}));
+print('Training data', assetListTR);
+print('Testing data', assetListTE);
+var n=assetListTR.size().getInfo();
 
-//Generate a feature collection with testing data
+//Generate a feature  collection that contains 5 sets of testing data
 // var listofcollection = function(assetListTR/*, assetListTE*/, size){
-  var classification=ee.ImageCollection([]);
-  for (var i=0; i<2/*n*/; i++){
-    var valueTR=ee.Dictionary(assetListTR.get(i))
-    var imgIDTR=ee.String(valueTR.get('id')).getInfo()
-    var train=ee.FeatureCollection(imgIDTR)
-    print(train)
+  var classification = ee.ImageCollection([]);
+  var overallAccuracy = ee.List([]); //ee.FeatureCollection([]);
+  for (var i=0; i<n; i++){
+    var valueTR=ee.Dictionary(assetListTR.get(i));
+    var imgIDTR=ee.String(valueTR.get('id')).getInfo();
+    var train=ee.FeatureCollection(imgIDTR);
+    // print('train', train);
     // trainingTR=training.merge(imgs)
-
 
 // Overlay the points on the imagery to get training.
 var training = objectPropertiesImage.sampleRegions({
@@ -181,30 +171,34 @@ var training = objectPropertiesImage.sampleRegions({
   scale: 2.5
 });
 
-//RF classification
+/////////////////////RF classification
 // Train a CART classifier with default parameters
 var classifier = ee.Classifier.smileRandomForest(100).train(training, 'Classes', bandss);
 
 // Classify the image with the same bands used for training.
-var classified1 = objectPropertiesImage.classify(classifier);
+var classified = objectPropertiesImage.classify(classifier);
 // var classified = classified.addBands(clusters).reduceConnectedComponents(ee.Reducer.mode(), 'clusters', 1024);//.reproject({crs: 'EPSG:4326', scale: 18});
 // print('classified', classified); 
-Map.addLayer(classified1, {min: 1, max: 11, palette: paletteJohanna}, 'Classified1', false);
+Map.addLayer(classified, {min: 1, max: 11, palette: palette}, 'Classified', false);
 
-Export.image.toAsset({
-  image: classified1.toByte(),//.toFloat(),
-  description: "classification_objectRF_wDEM" + (i+1),
-  assetId: "classification_objectRF_wDEM" + (i+1),
-  scale: 2.5,
-  region: clip,//train.geometry().bounds(),
-  maxPixels:1e13,
-});
+// // Export the Image - uncomment if want to export each
+// Export.image.toAsset({
+//   image: classified.toByte(),//.toFloat(),
+//   description: "classification_objectRF_wDEM" + (i+1),
+//   assetId: "classification_objectRF_wDEM" + (i+1),
+//   scale: 2.5,
+//   region: clip,//train.geometry().bounds(),
+//   maxPixels:1e13,
+// });
 
+// // // ///////////Overall map
+classification=classification.merge(classified);
 
-  var valueTE=ee.Dictionary(assetListTE.get(i))
-  var imgIDTE=ee.String(valueTE.get('id')).getInfo()
-  var test=ee.FeatureCollection(imgIDTE)
-  // print(test)
+//////////////////////Validation
+  var valueTE=ee.Dictionary(assetListTE.get(i));
+  var imgIDTE=ee.String(valueTE.get('id')).getInfo();
+  var test=ee.FeatureCollection(imgIDTE);
+  // print('test', test);
   // testing=testing.merge(imgs)
 
 var validation = objectPropertiesImage.sampleRegions({
@@ -216,20 +210,55 @@ var validated = validation.classify(classifier);
 
 // Get a confusion matrix representing expected accuracy.
 var testAccuracy = validated.errorMatrix('Classes', 'classification');
-// print('Validation error matrix_wDEM' + i, testAccuracy);
-// print('Validation overall accuracy_wDEM' + i, testAccuracy.accuracy());
+// print('Validation error matrix_wDEM' + (i+1), testAccuracy);
+// print('Validation overall accuracy_wDEM' + (i+1), testAccuracy.accuracy());
 var Matrix = ee.Feature(null, {matrix: testAccuracy.array()});
 // print(Matrix);
 var overall = testAccuracy.accuracy();
-// var overallAccuracy = ee.Feature(null, {matrix: overall1.array()});
-// print(overallAccuracy);
+// var accuracyMatrix = ee.Feature(null, {matrix: overall.array()});
+// print(accuracyMatrix);
 
-// Export the FeatureCollection.
+// // Export the Accuracy - uncomment if want to export each
+// Export.table.toDrive({
+//   collection: ee.FeatureCollection(Matrix),
+//   description:'testAccuracy_object08122021_wDEM' + (i+1),
+//   folder: 'testAccuracy',
+//   fileFormat: 'csv'
+// });
+
+overallAccuracy = overallAccuracy.add(overall);
+
+  }
+var classifiedX = classification
+print(classifiedX)
+
+var bestClassificationObj = classifiedX.mode();
+// Map.addLayer(bestClassificationObj);
+Map.addLayer(bestClassificationObj.toByte(), {min: 1, max: 11, palette: palette}, "Best_obj", false);
+Export.image.toDrive({
+  image: bestClassificationObj.toByte(),
+  description: "bestClassificationObj_wDEM",
+  folder: "objectBasedClassifications",
+  scale: 2.5,
+  region: clip,
+  maxPixels:1e13,
+});
+
+var overallAccuracyObj = overallAccuracy.reduce(ee.Reducer.mean());
+print('Overall accuracy', overallAccuracyObj);
+var standardDeviation = overallAccuracy.reduce(ee.Reducer.stdDev());
+print('SD', standardDeviation);
+
 Export.table.toDrive({
-  collection: ee.FeatureCollection(Matrix),
-  description:'testAccuracy_object08122021_wDEM' + (i+1),
-  folder: 'testAccuracy',
+  collection: overallAccuracyObj,
+  description:'overallAccuracy10111040',
+  folder: 'classification_accuracies',
   fileFormat: 'csv'
 });
 
-  }
+Export.table.toDrive({
+  collection: standardDeviation,
+  description:'standardDeviation10111040',
+  folder: 'classification_accuracies',
+  fileFormat: 'csv'
+});
