@@ -18,9 +18,14 @@
               geometry:
 */
 
-//     Import the image geometry
-var geometry = ee.FeatureCollection('users/rizayeva/DS1011-1040');
-Map.addLayer(geometry);
+
+//     Import two Corona images and build the image geometry
+var image2 = ee.Image('users/rizayeva/corona_2_5m/DS1011-1040DA_2_5m_JPEG_1band_EPSG32638');
+var image3 = ee.Image('users/rizayeva/corona_2_5m/DS1011-1040DF_2_5m_JPEG_1band_EPSG32638');
+var geometry10111040 = image2.addBands(image3).geometry();
+Map.addLayer(image2, {min: 0, max: 200}, 'DS1011-1040DA', false);
+Map.addLayer(image3, {min: 0, max: 200}, 'DS1011-1040DF', false);
+Map.addLayer(geometry10111040, {}, 'geometry10111040', false);
 
 //     Angular Second Moment for backward-facing camera
 var imageVisParam = {bands: ['ds10111040da_asm'], min: 0.015071922070983398, max: 0.06105865647962591,  gamma: [1]};
@@ -59,7 +64,7 @@ Export.image.toAsset({
   description: "angularSecondMoment_DA_10111040",
   assetId: 'GLCM/angularSecondMoment_DA_10111040',
   scale: 2.5,
-  region: geometry,
+  region: geometry10111040,
   maxPixels:1e13,
 });
 
@@ -101,7 +106,7 @@ Export.image.toAsset({
   description: "angularSecondMoment_DF_10111040",
   assetId: 'GLCM/angularSecondMoment_DF_10111040',
   scale: 2.5,
-  region: geometry,
+  region: geometry10111040,
   maxPixels:1e13,
 });
 
@@ -143,7 +148,7 @@ Export.image.toAsset({
   description: "entropy_DA_10111040",
   assetId: 'GLCM/entropy_DA_10111040',
   scale: 2.5,
-  region: geometry,
+  region: geometry10111040,
   maxPixels:1e13,
 });
 
@@ -185,7 +190,7 @@ Export.image.toAsset({
   description: "entropy_DF_10111040",
   assetId: 'GLCM/entropy_DF_10111040',
   scale: 2.5,
-  region: geometry,
+  region: geometry10111040,
   maxPixels:1e13,
 });
 
@@ -227,7 +232,7 @@ Export.image.toAsset({
   description: "homogeneity_DA_10111040",
   assetId: 'GLCM/homogeneity_DA_10111040',
   scale: 2.5,
-  region: geometry,
+  region: geometry10111040,
   maxPixels:1e13,
 });
 
@@ -269,6 +274,6 @@ Export.image.toAsset({
   description: "homogeneity_DF_10111040",
   assetId: 'GLCM/homogeneity_DF_10111040',
   scale: 2.5,
-  region: geometry,
+  region: geometry10111040,
   maxPixels:1e13,
 });
