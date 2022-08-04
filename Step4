@@ -166,7 +166,7 @@ var n = assetListTR.size().getInfo();
 //     Generate an empty list to later add each of the overall accuracies to be averaged
   var overallAccuracy = ee.List([]);
 //     Build a for loop to run a Random Forest classifier using one set of the training and testing data each time
-  for (var i=0; i<2; i++){
+  for (var i=0; i<n; i++){
 //     Select the subsequent set of training data each time
     var valueTR=ee.Dictionary(assetListTR.get(i));
     var imgIDTR=ee.String(valueTR.get('id')).getInfo();
