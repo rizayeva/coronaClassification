@@ -35,7 +35,7 @@ Map.addLayer(angularSecondMoment_DF, imageVisParam, 'angularSecondMoment_DF', fa
 //     Set the palette based on number and names of classes
 var palette = ['075b0e'/* forest*/,  '075b0e'/* forest*/, '075b0e'/* forest*/, 'ebebeb'/* barren*/, '9de64e'/* grass*/, 'e2d544'/* crop*/, 'ff0000'/* urban*/, '3f553c'/* wetland*/, '0033ff'/* lake*/, 'ffffff'/* snow*/, '88cdf6'/* river*/];
 
-//     Import two Corona images and rename the bands to DA
+//     Import two Corona images
 //     Rename the band names for afterward- ('da') and forward-facing ('df') cameras
 var image2 = ee.Image('users/rizayeva/corona_2_5m/DS1011-1040DA_2_5m_JPEG_1band_EPSG32638').rename(['ds10111040da']);
 var image3 = ee.Image('users/rizayeva/corona_2_5m/DS1011-1040DF_2_5m_JPEG_1band_EPSG32638').rename(['ds10111040df']);
