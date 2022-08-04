@@ -5,8 +5,7 @@
             texture layers
             training data directory;
             testing data directory;
-            geometry of Corona (variable called "clip")
-    
+
     Adjust the input files' directories
     Run the code
     Export the accuracies as csv files and the final classification map
@@ -43,14 +42,15 @@ var image3 = ee.Image('users/rizayeva/corona_2_5m/DS1011-1040DF_2_5m_JPEG_1band_
 Map.addLayer(image2, {min: 0, max: 200}, 'DS1011-1040DA', false);
 Map.addLayer(image3, {min: 0, max: 200}, 'DS1011-1040DF', false);
 
-//     Import image geometry
-var clip = ee.FeatureCollection('users/rizayeva/DS1011-1040');
+//     Build the image geometry
+var geometry10111040 = image2.addBands(image3).geometry();
+Map.addLayer(geometry10111040, {}, 'geometry10111040', false);
 
 //     Define and visualize the elevation layers
 var dataset = ee.Image('USGS/SRTMGL1_003');
-var elevation = dataset.select('elevation').clip(clip);
-var slope = ee.Terrain.slope(elevation).clip(clip);
-var aspect = ee.Terrain.aspect(elevation).clip(clip);
+var elevation = dataset.select('elevation').clip(geometry10111040);
+var slope = ee.Terrain.slope(elevation).clip(geometry10111040);
+var aspect = ee.Terrain.aspect(elevation).clip(geometry10111040);
 var imageVisParams = {bands: ['elevation'], min: 1, max: 3445,  gamma: [1.85], opacity: 1};
 Map.addLayer(elevation, imageVisParams, 'Elevation', false);
 Map.addLayer(slope, {}, 'slope', false);
@@ -195,7 +195,7 @@ Map.addLayer(classified, {min: 1, max: 11, palette: palette}, 'Classification ma
 //   description: "classification_objectRF_wDEM" + (i+1),
 //   assetId: "classification_objectRF_wDEM" + (i+1),
 //   scale: 2.5,
-//   region: clip,//train.geometry().bounds(),
+//   region: geometry10111040,
 //   maxPixels:1e13,
 // });
 
@@ -254,7 +254,7 @@ Export.image.toDrive({
   description: "bestClassificationObj_wDEM",
   folder: "objectBasedClassifications",
   scale: 2.5,
-  region: clip,
+  region: geometry10111040,
   maxPixels:1e13,
 });
 
