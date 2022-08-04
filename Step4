@@ -1,22 +1,18 @@
 /*  Author: Afag Rizayeva
     Date: 01-17-2022
-    Purpose: Calculate second-order texture metrics from Corona imagery
+    Purpose: Run object-based classification with incorporation of DEM
     Inputs: 2 Corona image layers manually imported in GEE
             texture layers
-            training and testing data
-            Corona geometry
+            training data directory;
+            testing data directory;
+            geometry of Corona (variable called "clip")
     
-    Instructions:
-    Adjust locations for input files:
-              texture layers - lines 20-25;
-              training and testing data - lines 41-60;
-              corona layers;
-              geometry of Corona (variable called "clip") - line 76.
+    Adjust the input files' directories:
     Run the code
-    
     Export the accuracies as csv files and the final classification map
 */
 
+//     Import and visualize textures
 var entropy_DA = ee.Image('users/rizayeva/GLCM/entropy_DA').toFloat();
 var entropy_DF = ee.Image('users/rizayeva/GLCM/entropy_DF').toFloat();
 var homogeneity_DA = ee.Image('users/rizayeva/GLCM/homogeneity_DA').toFloat();
@@ -37,13 +33,20 @@ Map.addLayer(angularSecondMoment_DA, imageVisParam, 'angularSecondMoment_DA', fa
 var imageVisParam = {bands: ['ds10111040df_asm'], min: 0.015071922070983398, max: 0.06105865647962591,  gamma: [1]};
 Map.addLayer(angularSecondMoment_DF, imageVisParam, 'angularSecondMoment_DF', false);
 
-var palette = ['075b0e',  '075b0e', '075b0e', 'ebebeb', '9de64e', 'e2d544', 'ff0000', '3f553c', '0033ff', 'ffffff', '88cdf6'];
+//     Set the palette based on number and names of classes
+var palette = ['075b0e'/* forest*/,  '075b0e'/* forest*/, '075b0e'/* forest*/, 'ebebeb'/* barren*/, '9de64e'/* grass*/, 'e2d544'/* crop*/, 'ff0000'/* urban*/, '3f553c'/* wetland*/, '0033ff'/* lake*/, 'ffffff'/* snow*/, '88cdf6'/* river*/];
+
+//     Import two Corona images and rename the bands to DA
+//     Rename the band names for afterward- ('da') and forward-facing ('df') cameras
 var image2 = ee.Image('users/rizayeva/corona_2_5m/DS1011-1040DA_2_5m_JPEG_1band_EPSG32638').rename(['ds10111040da']);
 var image3 = ee.Image('users/rizayeva/corona_2_5m/DS1011-1040DF_2_5m_JPEG_1band_EPSG32638').rename(['ds10111040df']);
-Map.addLayer(image2, {min: 0, max: 200}, 'imageDA', false);
-Map.addLayer(image3, {min: 0, max: 200}, 'imageDF', false);
+Map.addLayer(image2, {min: 0, max: 200}, 'DS1011-1040DA', false);
+Map.addLayer(image3, {min: 0, max: 200}, 'DS1011-1040DF', false);
 
+//     Import image geometry
 var clip = ee.FeatureCollection('users/rizayeva/DS1011-1040');
+
+//     Define and visualize the elevation layers
 var dataset = ee.Image('USGS/SRTMGL1_003');
 var elevation = dataset.select('elevation').clip(clip);
 var slope = ee.Terrain.slope(elevation).clip(clip);
@@ -53,17 +56,21 @@ Map.addLayer(elevation, imageVisParams, 'Elevation', false);
 Map.addLayer(slope, {}, 'slope', false);
 Map.addLayer(aspect, {}, 'aspect', false);
 
+//     Concatenate the two images, so that we have one image with two bands
 var img = ee.Image.cat([image2, image3]);
 // print('img', img);
 var img = ee.Image(img).divide(255);
 var bandNames = img.bandNames();
 print('img band names', bandNames); // ee.List of band names
-Map.addLayer(img, {bands: ["ds10111040df", "ds10111040df", "ds10111040da"], gamma: 0.8}, 'DS1011-1040');
+Map.addLayer(img, {bands: ["ds10111040df", "ds10111040df", "ds10111040da"], gamma: 0.8}, 'DS1011-1040', false);
 Map.centerObject(img.geometry(), 7);
 
-/////////////Segmentation
+///////////// Segmentation
+
+//     Set the seed grid size
 var seeds = ee.Algorithms.Image.Segmentation.seedGrid(40);
-// Run SNIC on the regular square grid.
+
+//     Run SNIC on the regular square grid.
 var snic = ee.Algorithms.Image.Segmentation.SNIC({
   image: img, 
   size: 32,
@@ -75,24 +82,21 @@ var snic = ee.Algorithms.Image.Segmentation.SNIC({
 // var snicbandNames = snic.bandNames();
 // print('Snic band names: ', snicbandNames); // ee.List of band names
 
+//     Select clusters from segmentation results
 var clusters = snic.select('clusters').reproject({crs: 'EPSG:4326', scale: 18});
 //Map.addLayer(clusters.randomVisualizer(), {}, 'clusters', false)
 Map.addLayer(snic, {bands: ['ds10111040da', 'ds10111040df'/*, 'b1_2', 'b1_3'*/], min:0, max:1, gamma: 0.8}, 'means', false);
-// Compute per-cluster stdDev.
+
+//     Compute per-cluster StdDev, Area, Perimeter, Width and Height, Shape, Texture metrics and Elevation layers
 var stdDev = img.addBands(clusters).reduceConnectedComponents(ee.Reducer.stdDev(), 'clusters', 1024).select(['ds10111040da', 'ds10111040df'], ['ds10111040da_StdDev', 'ds10111040df_StdDev']).reproject({crs: 'EPSG:4326', scale: 18});
 Map.addLayer(stdDev, {min:0, max:0.1}, 'StdDev', false);
-// Area, Perimeter, Width and Height
 var area = ee.Image.pixelArea().addBands(clusters).reduceConnectedComponents(ee.Reducer.sum(), 'clusters', 1024).reproject({crs: 'EPSG:4326', scale: 18});
 Map.addLayer(area, {min:50000, max: 500000}, 'Cluster Area', false);
-
 var minMax = clusters.reduceNeighborhood(ee.Reducer.minMax(), ee.Kernel.square(1)).reproject({crs: 'EPSG:4326', scale: 18}).reproject({crs: 'EPSG:4326', scale: 18});
 var perimeterPixels = minMax.select(0).neq(minMax.select(1)).rename('perimeter').reproject({crs: 'EPSG:4326', scale: 18});
 Map.addLayer(perimeterPixels, {min: 0, max: 1, opacity: 0.5, palette: ['000000', 'ffffff']}, 'perimeterPixels', false);
-
-var perimeter = perimeterPixels.addBands(clusters)
-    .reduceConnectedComponents(ee.Reducer.sum(), 'clusters', 1024).reproject({crs: 'EPSG:4326', scale: 18});
+var perimeter = perimeterPixels.addBands(clusters).reduceConnectedComponents(ee.Reducer.sum(), 'clusters', 1024).reproject({crs: 'EPSG:4326', scale: 18});
 Map.addLayer(perimeter, {min: 100, max: 400}, 'Perimeter size', false);
-
 var sizes = ee.Image.pixelLonLat().addBands(clusters).reduceConnectedComponents(ee.Reducer.minMax(), 'clusters', 1024).reproject({crs: 'EPSG:4326', scale: 18});
 var width = sizes.select('longitude_max').subtract(sizes.select('longitude_min')).rename('width').reproject({crs: 'EPSG:4326', scale: 18});
 var height = sizes.select('latitude_max').subtract(sizes.select('latitude_min')).rename('height').reproject({crs: 'EPSG:4326', scale: 18}).reproject({crs: 'EPSG:4326', scale: 18});
@@ -119,7 +123,9 @@ Map.addLayer(slope_10111040, {}, 'slope_10111040', false);
 var aspect_10111040 = aspect.addBands(clusters).reduceConnectedComponents(ee.Reducer.mean(), 'clusters', 1024).reproject({crs: 'EPSG:4326', scale: 18});
 Map.addLayer(aspect_10111040, {}, 'aspect_10111040', false);
 
-//Classification
+///////////// Classification
+
+//     Concatenate all layers into one 
 var objectPropertiesImage = ee.Image.cat([
   snic.select(['ds10111040da', 'ds10111040df']),
   stdDev,
@@ -143,45 +149,47 @@ var bandNames = objectPropertiesImage.bandNames();
 print('objectPropertiesImage bandNames', bandNames);
 var bandss = ['ds10111040da', 'ds10111040df', 'ds10111040da_StdDev', 'ds10111040df_StdDev', 'area', 'width', 'height', 'shape', 'ds10111040da_ent', 'ds10111040df_ent', 'ds10111040da_idm', 'ds10111040df_idm', 'ds10111040da_asm', 'ds10111040df_asm', 'slope', 'aspect', 'elevation'];
 
+//     Map asset directory that contains all Training and Testing data
 var assetIdTR='users/rizayeva/Training10111040';
 var assetIdTE='users/rizayeva/Testing10111040';
 
-// //Make a list that contains all the imagery in the asset directory
+//     Make a list that contains all the point data in the asset directory
 var assetListTR = ee.List(ee.data.getList({'id':assetIdTR}));
 var assetListTE = ee.List(ee.data.getList({'id':assetIdTE}));
 print('Training data', assetListTR);
 print('Testing data', assetListTE);
-var n=assetListTR.size().getInfo();
+//     Define the number of datasets
+var n = assetListTR.size().getInfo();
 
-//Generate a feature  collection that contains 5 sets of testing data
-// var listofcollection = function(assetListTR/*, assetListTE*/, size){
+//     Generate an empty Image Collection to later add each of the 10 classification results
   var classification = ee.ImageCollection([]);
-  var overallAccuracy = ee.List([]); //ee.FeatureCollection([]);
-  for (var i=0; i<n; i++){
+//     Generate an empty list to later add each of the overall accuracies to be averaged
+  var overallAccuracy = ee.List([]);
+//     Build a for loop to run a Random Forest classifier using one set of the training and testing data each time
+  for (var i=0; i<2; i++){
+//     Select the subsequent set of training data each time
     var valueTR=ee.Dictionary(assetListTR.get(i));
     var imgIDTR=ee.String(valueTR.get('id')).getInfo();
     var train=ee.FeatureCollection(imgIDTR);
     // print('train', train);
-    // trainingTR=training.merge(imgs)
+    // trainingTR=training.merge(train)
 
-// Overlay the points on the imagery to get training.
+//     Overlay the points on the imagery to get training.
 var training = objectPropertiesImage.sampleRegions({
   collection: train,
   properties: ['Classes'],
   scale: 2.5
 });
 
-/////////////////////RF classification
-// Train a CART classifier with default parameters
+//     Train a CART classifier with default parameters
 var classifier = ee.Classifier.smileRandomForest(100).train(training, 'Classes', bandss);
 
-// Classify the image with the same bands used for training.
+//      Classify the image with the same bands used for training
 var classified = objectPropertiesImage.classify(classifier);
-// var classified = classified.addBands(clusters).reduceConnectedComponents(ee.Reducer.mode(), 'clusters', 1024);//.reproject({crs: 'EPSG:4326', scale: 18});
 // print('classified', classified); 
-Map.addLayer(classified, {min: 1, max: 11, palette: palette}, 'Classified', false);
+Map.addLayer(classified, {min: 1, max: 11, palette: palette}, 'Classification map' + (i+1), false);
 
-// // Export the Image - uncomment if want to export each
+// //     Export the Image - uncomment if want to export each
 // Export.image.toAsset({
 //   image: classified.toByte(),//.toFloat(),
 //   description: "classification_objectRF_wDEM" + (i+1),
@@ -191,15 +199,16 @@ Map.addLayer(classified, {min: 1, max: 11, palette: palette}, 'Classified', fals
 //   maxPixels:1e13,
 // });
 
-// // // ///////////Overall map
+//     Overall map
 classification=classification.merge(classified);
 
-//////////////////////Validation
+//     Validation
+//     Select the subsequent set of testing data each time
   var valueTE=ee.Dictionary(assetListTE.get(i));
   var imgIDTE=ee.String(valueTE.get('id')).getInfo();
   var test=ee.FeatureCollection(imgIDTE);
   // print('test', test);
-  // testing=testing.merge(imgs)
+  // testing=testing.merge(test)
 
 var validation = objectPropertiesImage.sampleRegions({
   collection: test,
@@ -208,17 +217,15 @@ var validation = objectPropertiesImage.sampleRegions({
 });
 var validated = validation.classify(classifier);
 
-// Get a confusion matrix representing expected accuracy.
+//     Get a confusion matrix representing expected accuracy and an overall accuracy
+//     Uncomment the "print" commands if want to visualize the accuracies and matrices for each set of training and testing data in GEE console
 var testAccuracy = validated.errorMatrix('Classes', 'classification');
-// print('Validation error matrix_wDEM' + (i+1), testAccuracy);
-// print('Validation overall accuracy_wDEM' + (i+1), testAccuracy.accuracy());
 var Matrix = ee.Feature(null, {matrix: testAccuracy.array()});
-// print(Matrix);
+// print('Validation error matrix_wDEM' + (i+1), testAccuracy);
 var overall = testAccuracy.accuracy();
-// var accuracyMatrix = ee.Feature(null, {matrix: overall.array()});
-// print(accuracyMatrix);
+// print('Overall' + (i+1), overall);
 
-// // Export the Accuracy - uncomment if want to export each
+// //    Export the matrix - uncomment if want to export each
 // Export.table.toDrive({
 //   collection: ee.FeatureCollection(Matrix),
 //   description:'testAccuracy_object08122021_wDEM' + (i+1),
@@ -226,15 +233,22 @@ var overall = testAccuracy.accuracy();
 //   fileFormat: 'csv'
 // });
 
+//     Add subsequent overall accuracy with each loop, to initially empty "overallAccuracy" list
 overallAccuracy = overallAccuracy.add(overall);
 
   }
-var classifiedX = classification
-print(classifiedX)
 
+//     Image collection of classification results from each set of training data
+var classifiedX = classification;
+print(classifiedX);
+
+//     Best map representing the most common pixel value based on all sets of training data
 var bestClassificationObj = classifiedX.mode();
-// Map.addLayer(bestClassificationObj);
+
+//     The following map may not load due to memory limits, but should succesfully export to Assets or Drive
 Map.addLayer(bestClassificationObj.toByte(), {min: 1, max: 11, palette: palette}, "Best_obj", false);
+
+//     Export the best map to Drive
 Export.image.toDrive({
   image: bestClassificationObj.toByte(),
   description: "bestClassificationObj_wDEM",
@@ -244,11 +258,18 @@ Export.image.toDrive({
   maxPixels:1e13,
 });
 
+//     Calculate the average overall accuracy
 var overallAccuracyObj = overallAccuracy.reduce(ee.Reducer.mean());
 print('Overall accuracy', overallAccuracyObj);
+
+//     Calculate the Standard Deviation based on overall accuracies from all training data
 var standardDeviation = overallAccuracy.reduce(ee.Reducer.stdDev());
 print('SD', standardDeviation);
 
+//     The "print" function may not always work due to the
+//     To make sure it works, we can reduce the number of training and testing datasets used
+//     For example, use just two datasets (2 instead of n in the beginning of the for loop)
+//     Otherwise, it should always be possible to export them to Drive
 Export.table.toDrive({
   collection: overallAccuracyObj,
   description:'overallAccuracy10111040',
@@ -262,3 +283,6 @@ Export.table.toDrive({
   folder: 'classification_accuracies',
   fileFormat: 'csv'
 });
+
+
+Map.addLayer(image, {min: 1, max: 11, palette: palette}, 'Classification');
