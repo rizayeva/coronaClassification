@@ -5,13 +5,10 @@
 */
 
 
-//     Import the Corona imagery
-var image2 = ee.Image('users/rizayeva/corona_2_5m/DS1011-1040DA_2_5m_JPEG_1band_EPSG32638');
-var image3 = ee.Image('users/rizayeva/corona_2_5m/DS1011-1040DF_2_5m_JPEG_1band_EPSG32638');
-
-//     Assign the band names for afterward- ('da') and forward-facing ('df') cameras
-var image2 = image2.select(['b1'],['da']);
-var image3 = image3.select(['b1'],['df']);
+//     Import two Corona images and rename the bands to DA
+//     Rename the band names for afterward- ('da') and forward-facing ('df') cameras
+var image2 = ee.Image('users/rizayeva/corona_2_5m/DS1011-1040DA_2_5m_JPEG_1band_EPSG32638').rename(['da']);
+var image3 = ee.Image('users/rizayeva/corona_2_5m/DS1011-1040DF_2_5m_JPEG_1band_EPSG32638').rename(['df']);
 
 //     Concatenate the two images, so that we have one image with two bands
 var img = ee.Image.cat([image2, image3]);
