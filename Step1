@@ -1,7 +1,12 @@
 /*  Author: Afag Rizayeva
     Date: 01-17-2022
     Purpose: Export the training objects for further labeling
-    Inputs: 2 Corona image layers manually imported in GEE, point grid
+    Inputs: 2 Corona image layers manually imported in GEE
+            Point grid
+    
+    Adjust the input files' directories
+    Run the code
+    Export the accuracies as csv files and the final classification map
 */
 
 
