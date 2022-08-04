@@ -13,12 +13,12 @@ The files can be too large for GEE, but you can also apply a JPEG or LZW compres
 Set the correct date when uploading in GEE
 
 
-Use the code in Step1 to export the objects corresponding to the point grid locations within the image of interest. To access the GEE repository use:
+Use the code in Step1 to export the objects corresponding to the point grid locations within the image of interest. To view a sample of the results for Step1 please use the following link:
+
 https://rizayeva.users.earthengine.app/view/step1
 
 
 
-To view a sample of the results for Step1 please use the following link:
 
 
 To visualize the results of classification and the accuracy assessments for each  method, please use the following the link:
