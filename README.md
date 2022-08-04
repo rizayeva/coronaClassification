@@ -18,7 +18,13 @@ Use the code in Step1 to export the objects corresponding to the point grid loca
 https://rizayeva.users.earthengine.app/view/step1
 
 
+Use the code in Step2 to calculate second-order texture metrics from Corona imagery. 
 
+
+Use the code in Step3 to merge the separate exported texture layers into one for each of the chosen second-order texture metrics. 
+
+
+Use the code in Step4 to run ten fold object-based classification of Corona data with incorporation of DEM. 
 
 
 To visualize the results of classification and the accuracy assessments for each  method, please use the following the link:
