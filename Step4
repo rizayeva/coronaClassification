@@ -1,6 +1,6 @@
 /*  Author: Afag Rizayeva
     Date: 01-17-2022
-    Purpose: Run object-based classification with incorporation of DEM
+    Purpose: Ten fold object-based classification with incorporation of DEM
     Inputs: 2 Corona image layers manually imported in GEE
             texture layers
             training data directory;
@@ -283,6 +283,3 @@ Export.table.toDrive({
   folder: 'classification_accuracies',
   fileFormat: 'csv'
 });
-
-
-Map.addLayer(image, {min: 1, max: 11, palette: palette}, 'Classification');
