@@ -7,7 +7,7 @@
             testing data directory;
             geometry of Corona (variable called "clip")
     
-    Adjust the input files' directories:
+    Adjust the input files' directories
     Run the code
     Export the accuracies as csv files and the final classification map
 */
