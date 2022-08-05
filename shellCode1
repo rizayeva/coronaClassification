@@ -5,7 +5,8 @@
 // To change the drive to z: type the following
 pushd z:
 // press Enter
-// find Corona file location:
+// find Corona file location
+// in our case:
 cd Z:\mnita\Caucaz\export\2_5m_export
 // then type the following adjusting the file name
 // both LZW and JPEG compressions work equally well
