@@ -25,7 +25,7 @@ If you decide to divide your image in several geometries, you may start with a l
 If you divided your image into several geometries, then also use code in **texMer** to merge the separate exported texture layers into one for each of the chosen second-order texture metrics. 
 
 
-Use the code in **Code3** to run ten fold object-based classification of Corona data with incorporation of DEM. 
+Use the code in **OBIA_10111040_10fold** to run ten fold object-based classification of Corona data with incorporation of DEM. 
 
 Use previously exported objects for visual identification only. Do not import objects as training/testing data, since this will fail and even if it does not, it would overestimate the classes with larger objects)
 
