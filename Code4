@@ -6,7 +6,7 @@
             training data directory;
             testing data directory;
 
-    Adjust the input files' directories and palette
+    Adjust the input files' directories and palette variable
     Run the code
     Export the accuracies as csv files and the final classification map
 */
