@@ -49,7 +49,7 @@ GEE -> Assets -> New -> Shapefiles: Drag and drop each set one-by-one (5 files f
 
 Import labeled points in GEE
 
-Adjust the following variables: **palette**
+Follow the instructions provided in the beginning of the code 
 
 Due to memory limits depending on the size of your study area, the resulting maps may not be possible to visualize right away. In that case please export the maps and the accuracy results to Assets or Drive
 
