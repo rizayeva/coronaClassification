@@ -2,7 +2,7 @@
 
 
   
-  Generate a point grid for further data collection
+  **Generate a point grid for further data collection**
   
   Import the point grid in GEE as FeatureCollection (Assets -> New -> Shape files). Be sure to add all auxiliary files and not only .shp
 
