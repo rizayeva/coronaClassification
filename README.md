@@ -28,6 +28,7 @@ If you divided your image into several geometries, then also use code in **Code2
 Use the code in **Code3** to run ten fold object-based classification of Corona data with incorporation of DEM. 
 
 Use previously exported objects for visual identification only. Do not import objects as training/testing data, since this will fail and even if it does not, it would overestimate the classes with larger objects)
+
 **Separate 80/20% Training/testing data:**
 
 
