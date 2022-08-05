@@ -6,7 +6,7 @@
   
   Import the point grid in GEE as FeatureCollection (Assets -> New -> Shape files). Be sure to add all auxiliary files and not only .shp
 
-Import the images to GEE (with correct projection and 1 band). The rasters can be too large for GEE, but you can also apply a JPEG or LZW compression. For this, use OSGeo and follow the steps in **shellCode1**
+Import the images to GEE (with correct projection and 1 band). The rasters can be too large for GEE, but you can also apply a JPEG or LZW compression. For this, use OSGeo and follow the steps in **shellCode**
 
 Use the code in **Code1** to export the objects corresponding to the point grid locations within the image of interest. To view a sample of the results for Step1 please use the following link:
 
