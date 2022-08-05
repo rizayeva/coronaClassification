@@ -17,12 +17,12 @@ After exporting the objects, overlay them with the point grid on your local work
 You may also want to create a column to take notes about the quality of the objects. Pure objects can be used for training and validation, while mixed (over-segmented) or shifted objects can only be used for validation.
 
 
-Use the code in **Code2** to calculate second-order texture metrics from Corona imagery. 
+Use the code in **texCal** to calculate second-order texture metrics from Corona imagery. 
 
 Follow the instructions within the code
 If you decide to divide your image in several geometries, you may start with a larger size geometry first and then if processing results in an error, you may decrease the size. With time, the sizes of the geometries will be intuitive. For reference, check the sizes of my geometries within the same code.
 
-If you divided your image into several geometries, then also use code in **Code2.1** to merge the separate exported texture layers into one for each of the chosen second-order texture metrics. 
+If you divided your image into several geometries, then also use code in **texMer** to merge the separate exported texture layers into one for each of the chosen second-order texture metrics. 
 
 
 Use the code in **Code3** to run ten fold object-based classification of Corona data with incorporation of DEM. 
