@@ -29,15 +29,26 @@ Use the code in **Code4** to run ten fold object-based classification of Corona 
 
 Use previously exported objects for visual identification only. Do not import objects as training/testing data, since this will fail and even if it does not, it would overestimate the classes with larger objects)
 **Separate 80/20% Training/testing data:**
+
+
 Select randomly 80% of the points overlapping with pure objects and export them as TrainingMMDDYYYY_1, TrainingMMDDYYYY_2, …, TrainingMMDDYYYY_10 (shapefiles)
+
 If you decide to add more points for poorly represented classes, only add them to Training data.
+
 Export the remaining 20% of the points to later be used for testing as TestMMDDYYYY_1, TestMMDDYYYY_2, …, TestMMDDYYYY_10 (shapefiles)
+
 Export 20% of points overlappping with mis-segmented objects (over-segmented specifically) and 20% from shifted objects.
+
 Merge the three layers and export them as TestingMMDDYYYY_1, TestingMMDDYYYY_2, …, TestingMMDDYYYY_10 (shapefiles)
+
 Always check the number of points in the resulting shapefiles to prevent any errors
+
 Import the point data in GEE in separate folders for *Training* and *Testing*. 
+
 GEE -> Assets -> New -> Shapefiles: Drag and drop each set one-by-one (5 files for TrainingMMDDYYYY_1, then 5 files for TestingMMDDYYYY_1, etc.); add the Folder name in front of the Asset name (would look like: Training/TrainingMMDDYYYY_1); Click “Upload”
+
 Import labeled points in GEE
+
 Adjust the following variables: **palette**
 
 Due to memory limits depending on the size of your study area, the resulting maps may not be possible to visualize right away. In that case please export the maps and the accuracy results to Assets or Drive
