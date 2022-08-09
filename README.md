@@ -62,4 +62,4 @@ https://rizayeva.users.earthengine.app/view/coronaclassificationvisualization
 Should you have any questions, do not hesitate to reach out via: rizayeva@wisc.edu
 
 For reference:
-Rizayeva, A., Nita, M.D., Radeloff, V.C., 2022 **(?)**, Large-area, 1964 land cover classifications of Corona spy satellite imagery for the Caucasus Mountains, *Remote Sensing of Environment*, 248, 111967.
+Rizayeva, A., Nita, M.D., Radeloff, V.C., 2022 **(?)**, Large-area, 1964 land cover classifications of Corona spy satellite imagery for the Caucasus Mountains, *Remote Sensing of Environment*.
