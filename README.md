@@ -44,11 +44,11 @@ Merge the three layers and export them as TestingMMDDYYYY_1, TestingMMDDYYYY_2, 
 
 Always check the number of points in the resulting shapefiles to prevent any errors
 
+**Import labeled points in GEE**
+
 Import the point data in GEE in separate folders for *Training* and *Testing*. 
 
 GEE -> Assets -> New -> Shapefiles: Drag and drop each set one-by-one (5 files for TrainingMMDDYYYY_1, then 5 files for TestingMMDDYYYY_1, etc.); add the Folder name in front of the Asset name (would look like: Training/TrainingMMDDYYYY_1); Click “Upload”
-
-**Import labeled points in GEE**
 
 Follow the instructions provided in the beginning of the code 
 
