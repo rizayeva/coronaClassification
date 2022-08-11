@@ -107,7 +107,7 @@ var keys = ee.Dictionary(obj).keys();
 //     Entropy DA
 //     Build a function to calculate entropy
 var entropyDA = function(objctID) {
-  return ee.Image(image2.updateMask(clusters.eq(ee.Number.parse(objctID))).glcmTexture({size: 3}).select('ds10111040da_ent'));
+  return ee.Image(image2.clip(tilesbuffer_list.get(i)).updateMask(clusters.eq(ee.Number.parse(objctID))).glcmTexture({size: 3}).select('ds10111040da_ent'));
 };
 
 //     Apply the function to each object within the image for intra-class variability
@@ -195,7 +195,7 @@ Export.image.toAsset({
 //     Homogeneity DA
 //     Build a function to calculate homogeneity
 var homogeneityDA = function(objctID) {
-  return ee.Image(image2.updateMask(clusters.eq(ee.Number.parse(objctID))).glcmTexture({size: 3}).select('ds10111040da_idm'));
+  return ee.Image(image2.clip(tilesbuffer_list.get(i)).updateMask(clusters.eq(ee.Number.parse(objctID))).glcmTexture({size: 3}).select('ds10111040da_idm'));
 };
 
 //     Apply the function to each object within the image for intra-class variability
@@ -283,7 +283,7 @@ Export.image.toAsset({
 //     Angular Second Moment DA
 //     Build a function to calculate angular second moment
 var angularSecondMomentDA = function(objctID) {
-  return ee.Image(image2.updateMask(clusters.eq(ee.Number.parse(objctID))).glcmTexture({size: 3}).select('ds10111040da_asm'));
+  return ee.Image(image2.clip(tilesbuffer_list.get(i)).updateMask(clusters.eq(ee.Number.parse(objctID))).glcmTexture({size: 3}).select('ds10111040da_asm'));
 };
 
 //     Apply the function to each object within the image for intra-class variability
