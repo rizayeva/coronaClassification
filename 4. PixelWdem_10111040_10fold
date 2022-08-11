@@ -217,7 +217,7 @@ print('Overall accuracy', overallAccuracyPxl);
 var standardDeviation = ee.FeatureCollection(overallAccuracy.reduce(ee.Reducer.stdDev()));
 print('SD', standardDeviation);
 
-//     The "print" function may not always work due to the
+//     The "print" function may not always work due to the memory limits
 //     To make sure it works, we can reduce the number of training and testing datasets used
 //     For example, use just two datasets (2 instead of n in the beginning of the for loop)
 //     Otherwise, it should always be possible to export them to Drive
