@@ -152,7 +152,7 @@ var n = assetListTR.size().getInfo();
     var valueTR=ee.Dictionary(assetListTR.get(i));
     var imgIDTR=ee.String(valueTR.get('id')).getInfo();
     var train=ee.FeatureCollection(imgIDTR);
-    // print('train', train);
+    // print('train' + (i+1), train);
     // trainingTR=training.merge(train)
 
 //     Overlay the points on the imagery to get training.
