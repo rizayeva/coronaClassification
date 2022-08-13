@@ -1,6 +1,6 @@
 # Historical Corona satellite imagery classification within GEE
 
-<h1> Hello </h1>
+<h2> Hello </h2>
   
   **Generate a point grid for further data collection**
   
