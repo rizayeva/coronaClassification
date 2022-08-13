@@ -10,12 +10,12 @@
 */
 
 
-//     Import two Corona images and rename the bands to DA
+//     Import two Corona images
 //     Rename the band names for afterward- ('da') and forward-facing ('df') cameras
 var image2 = ee.Image('users/rizayeva/corona_2_5m/DS1011-1040DA_2_5m_JPEG_1band_EPSG32638').rename(['da']);
 var image3 = ee.Image('users/rizayeva/corona_2_5m/DS1011-1040DF_2_5m_JPEG_1band_EPSG32638').rename(['df']);
 
-//     Concatenate the two images, so that we have one image with two bands
+//     Concatenate the two images
 var img = ee.Image.cat([image2, image3]);
 print(img);
 // print('Band names: ', img.bandNames()); // ee.List of band names
@@ -26,7 +26,7 @@ var img = ee.Image(img).divide(255);
 //     Center the map view 
 Map.centerObject(img.geometry(), 7);
 
-//     Import and visualize the point grid to be used for extraction of the segment grid
+//     Import and visualize the point grid for extraction of the segment grid
 var table4 = ee.FeatureCollection('users/rizayeva/grid5km_label_07142020_EPSG32638');
 Map.addLayer(table4, {}, 'training points');
 
@@ -99,7 +99,7 @@ var saveAllJoin = ee.Join.saveAll({
   matchesKey: 'FID_test_l',
 });
 
-//     Create a for loop to extract all segments that overlapp with the point grid
+//     Create a for loop to extract all segments that overlap with the point grid
 var trainobjs = [];
 var i;
 for (i = 0; i < size; i++) {
