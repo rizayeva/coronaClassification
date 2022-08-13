@@ -56,7 +56,7 @@ Map.addLayer(elevation, imageVisParams, 'Elevation', false);
 Map.addLayer(slope, {}, 'slope', false);
 Map.addLayer(aspect, {}, 'aspect', false);
 
-//     Concatenate the two images, so that we have one image with two bands
+//     Concatenate the two images
 var img = ee.Image.cat([image2, image3]);
 // print('img', img);
 var img = ee.Image(img).divide(255);
