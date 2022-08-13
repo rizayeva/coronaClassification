@@ -2,7 +2,7 @@
 
 // Open the OSGeo4W Shell (usually under QGIS folder in "Start")
 
-// To change the drive to z: type the following
+// To change the drive to z: (where our images are located) type the following
 pushd z:
 // press Enter
 // find Corona file location
