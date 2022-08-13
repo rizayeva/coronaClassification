@@ -1,4 +1,4 @@
-// To decrease the file size for Corona images to be able to load it into the GEE
+// Decrease the Corona image file size to load to the GEE
 
 // Open the OSGeo4W Shell (usually under QGIS folder in "Start")
 
@@ -8,11 +8,10 @@ pushd z:
 // find Corona file location
 // in our case:
 cd Z:\mnita\Caucaz\export\2_5m_export
-// then type the following adjusting the file name
+// then type the following, adjusting the file name
 // both LZW and JPEG compressions work equally well
 
 gdal_translate -of GTiff -ot Byte -co "COMPRESS=JPEG" -co "BIGTIFF=YES" -co "TILED=YES" -co "BLOCKXSIZE=256" -co "BLOCKYSIZE=256" -b 1 DS1023-2087_DF.tif DS1023-2087_DF_1band_JPEGcomp.tif
 gdal_translate -of GTiff -ot Byte -co "COMPRESS=LZW" -co "BIGTIFF=YES" -co "TILED=YES" -co "BLOCKXSIZE=256" -co "BLOCKYSIZE=256" -b 1 DS1023-2087_DF.tif DS1023-2087_DF_1band_LZWcomp.tif
 
-// This will start the process and then you can import the resulting file in GEE
-
+// You can import the resulting file in GEE
