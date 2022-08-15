@@ -1,10 +1,10 @@
 <h1> Historical Corona satellite imagery classification within GEE </h1>
 
-  **Generate a point grid**
+  **Generate a point grid.**
   
-  Import the point grid in GEE as a FeatureCollection (Assets -> New -> Shape files). Be sure to add all auxiliary files and not only the .shp file
+  Import the point grid in GEE as a FeatureCollection (Assets -> New -> Shape files). Be sure to add all auxiliary files and not only the .shp file.
 
-Import the images to GEE (with the correct projection and 1 band). If the rasters are too large for GEE, apply a JPEG or LZW compression. For this, use OSGeo and follow the steps in **shellCode**
+Import the images to GEE (with the correct projection and 1 band). If the rasters are too large for GEE, apply a JPEG or LZW compression. For this, use OSGeo and follow the steps in **shellCode**.
 
 Use the code in **traObjExp** to export the objects corresponding to the point grid locations within the image. <a target="_blank" href="https://rizayeva.users.earthengine.app/view/step1">Click here</a> to view a sample of the results for **traObjExp**.
 
