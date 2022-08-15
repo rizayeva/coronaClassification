@@ -7,7 +7,7 @@
 ```
 </h1>
 
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 55 20" fill="none">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 55 20" fill="green">
     <text x="0" y="15" fill="#4285f4">G</text>
     <text x="12" y="15" fill="#ea4335">o</text>
     <text x="21" y="15" fill="#fbbc05">o</text>
