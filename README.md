@@ -7,7 +7,7 @@
 + text in green
 ! text in orange
 # text in gray
-@@ text in purple (and bold)@@
+@@ Historical Corona satellite imagery classification within GEE @@
 ```
 
   **Generate a point grid.**
