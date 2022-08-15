@@ -3,6 +3,12 @@
 </head>
 
 <h1 style="text-align:center;"> Historical Corona satellite imagery classification within GEE </h1>
+<style>
+      h1 {
+        text-align: center;
+      }
+    </style>
+
 <body>
   **Generate a point grid.**
   
