@@ -6,10 +6,7 @@
 
 Import the images to GEE (with the correct projection and 1 band). If the rasters are too large for GEE, apply a JPEG or LZW compression. For this, use OSGeo and follow the steps in **shellCode**
 
-Use the code in **traObjExp** to export the objects corresponding to the point grid locations within the image. To view a sample of the results for Step1 please use the following link:
-<a target="_blank" href="https://rizayeva.users.earthengine.app/view/step1">link</a>.
-
-https://rizayeva.users.earthengine.app/view/step1
+Use the code in **traObjExp** to export the objects corresponding to the point grid locations within the image. To view a sample of the results for Step1 please use the <a target="_blank" href="https://rizayeva.users.earthengine.app/view/step1">link</a>.
 
 After exporting the objects, overlay them with the point grid on your local workstation and label the land cover classes by creating a new "Classes" column in the point shapefile.
 
