@@ -1,4 +1,4 @@
-<h1> Historical Corona satellite imagery classification within GEE </h1>
+<h1 text-align:center; > Historical Corona satellite imagery classification within GEE </h1>
 
   **Generate a point grid.**
   
