@@ -52,7 +52,7 @@ Follow the instructions provided in the beginning of the code.
 Due to memory limits depending on the size of your study area, the resulting maps may not be possible to visualize right away. In that case please export the maps and the accuracy results to Assets or Drive.
 
 
-To visualize the results of the classification and the accuracy assessments for each  method used in our paper, please use the following the link:
+<a target="_blank" href="https://rizayeva.users.earthengine.app/view/coronaclassificationvisualization">Click here to visualize</a> the results of the classification and the accuracy assessments for each  method used in our paper, please use the following the link:
 https://rizayeva.users.earthengine.app/view/coronaclassificationvisualization
 
 
