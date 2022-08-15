@@ -6,7 +6,7 @@
 
 Import the images to GEE (with the correct projection and 1 band). If the rasters are too large for GEE, apply a JPEG or LZW compression. For this, use OSGeo and follow the steps in **shellCode**
 
-Use the code in **traObjExp** to export the objects corresponding to the point grid locations within the image. To view a sample of the results for Step1 please use the following link:
+Use the code in **traObjExp** to export the objects corresponding to the point grid locations within the image. To view a sample of the results for Step1 please use the following link: <link href="https://rizayeva.users.earthengine.app/view/step1"/>
 
 https://rizayeva.users.earthengine.app/view/step1
 
