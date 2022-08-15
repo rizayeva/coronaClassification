@@ -1,8 +1,10 @@
+
 <h1>
 ```diff
 - Historical Corona satellite imagery classification within GEE
 ```
 </h1>
+
 
   **Generate a point grid.**
   
