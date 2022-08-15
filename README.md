@@ -2,7 +2,7 @@
 <h1>
  
 ```diff
-- Historical Corona satellite imagery classification within GEE
+- Historical Corona satellite imagery classification within GEE -
 ```
 </h1>
 
