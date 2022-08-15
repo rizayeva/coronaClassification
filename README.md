@@ -1,8 +1,14 @@
 <style>
-      h1 {
-        text-align: center;
-      }
-    </style>
+.topic {
+    color: green;
+    font-weight:700;
+    font-size: 30px;
+}
+</style>
+
+<div class="topic">
+    Historical Corona satellite imagery classification within GEE
+</div>
     
 <head>
 <link href="styles.css" rel="stylesheet"/>
