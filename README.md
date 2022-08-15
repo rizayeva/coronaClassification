@@ -1,6 +1,6 @@
 
 
-<h1 style="color:green;"> Historical Corona satellite imagery classification within GEE </h1>
+<h1>
     
 ```diff
 - text in red
@@ -9,6 +9,8 @@
 # text in gray
 @@ Historical Corona satellite imagery classification within GEE @@
 ```
+</h1>
+
 
   **Generate a point grid.**
   
