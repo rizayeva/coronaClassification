@@ -1,13 +1,15 @@
-<head>
-<link href="styles.css" rel="stylesheet"/>
-</head>
-
-<h1 style="text-align:center;"> Historical Corona satellite imagery classification within GEE </h1>
 <style>
       h1 {
         text-align: center;
       }
     </style>
+    
+<head>
+<link href="styles.css" rel="stylesheet"/>
+</head>
+
+<h1 style="text-align:center;"> Historical Corona satellite imagery classification within GEE </h1>
+
 
 <body>
   **Generate a point grid.**
