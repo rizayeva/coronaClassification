@@ -2,6 +2,13 @@
 
 <h1 style="text-color:green;"> Historical Corona satellite imagery classification within GEE </h1>
     
+```diff
+- text in red
++ text in green
+! text in orange
+# text in gray
+@@ text in purple (and bold)@@
+```
 
   **Generate a point grid.**
   
