@@ -3,6 +3,7 @@
 </head>
 
 <h1 style="text-align:center;"> Historical Corona satellite imagery classification within GEE </h1>
+
   **Generate a point grid.**
   
   Import the point grid in GEE as a FeatureCollection (Assets -> New -> Shape files). Be sure to add all auxiliary files and not only the .shp file.
