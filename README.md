@@ -1,3 +1,8 @@
+
+
+<h1 style="text-align:center;"> Historical Corona satellite imagery classification within GEE </h1>
+
+
 <style>
 .topic {
     color: green;
@@ -13,10 +18,6 @@
 <head>
 <link href="styles.css" rel="stylesheet"/>
 </head>
-
-<h1 style="text-align:center;"> Historical Corona satellite imagery classification within GEE </h1>
-
-
 
   **Generate a point grid.**
   
