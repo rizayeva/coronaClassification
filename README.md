@@ -11,7 +11,7 @@
 <h1 style="text-align:center;"> Historical Corona satellite imagery classification within GEE </h1>
 
 
-<body>
+
   **Generate a point grid.**
   
   Import the point grid in GEE as a FeatureCollection (Assets -> New -> Shape files). Be sure to add all auxiliary files and not only the .shp file.
@@ -71,4 +71,3 @@ Should you have any questions, do not hesitate to reach out: rizayeva@wisc.edu
 
 For reference:
 Rizayeva, A., Nita, M.D., Radeloff, V.C., 2022 **(?)**, Large-area, 1964 land cover classifications of Corona spy satellite imagery for the Caucasus Mountains, *Remote Sensing of Environment*.
-</body>
