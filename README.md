@@ -3,11 +3,7 @@
 <h1>
     
 ```diff
-- text in red
-+ text in green
-! text in orange
-# text in gray
-@@ Historical Corona satellite imagery classification within GEE @@
+Historical Corona satellite imagery classification within GEE
 ```
 </h1>
 
