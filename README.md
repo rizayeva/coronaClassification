@@ -1,6 +1,6 @@
 
 
-<h1 style="text-color:green;"> Historical Corona satellite imagery classification within GEE </h1>
+<h1 style="color:green;"> Historical Corona satellite imagery classification within GEE </h1>
     
 ```diff
 - text in red
