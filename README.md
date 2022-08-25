@@ -28,9 +28,7 @@ If you decide to divide your image into several geometries, you may start with a
 If you divided your image into several geometries, use the code in **texMer** to merge the separate exported texture layers into one texture layer for each of the chosen second-order texture metrics. 
 
 
-Use the code in **OBIA_10111040_10fold** to run a ten-fold object-oriented classification of Corona data with a DEM. 
 
-Use previously exported objects for visual identification only. Do not import objects as training/testing data, since this will either fail, or overestimate the classes with larger objects).
 
 **Separate 80/20% Training/testing data (will be done 10 times):**
 -------------------------------------------------------------------------------------------------------------------
@@ -63,6 +61,12 @@ Due to memory limits depending on the size of your study area, the resulting map
 
 <a target="_blank" href="https://rizayeva.users.earthengine.app/view/coronaclassificationvisualization">Click here to visualize</a> the results of the classification and the accuracy assessments for each  method used in our paper.
 
+
+Use the code in **OBIA_10111040_10fold** to run a ten-fold object-oriented classification of Corona data with a DEM. 
+-------------------------------------------------------------------------------------------------------------------
+
+
+Use previously exported objects for visual identification only. Do not import objects as training/testing data, since this will either fail, or overestimate the classes with larger objects).
 
 Should you have any questions, do not hesitate to reach out: rizayeva@wisc.edu
 
