@@ -32,6 +32,7 @@ Use the code in **OBIA_10111040_10fold** to run a ten-fold object-oriented class
 Use previously exported objects for visual identification only. Do not import objects as training/testing data, since this will either fail, or overestimate the classes with larger objects).
 
 **Separate 80/20% Training/testing data (will be done 10 times):**
+-------------------------------------------------------------------------------------------------------------------
 
 
 Select randomly 80% of the points overlapping with pure objects and export them as TrainingMMDDYYYY_1, TrainingMMDDYYYY_2, …, TrainingMMDDYYYY_10 (shapefiles).
