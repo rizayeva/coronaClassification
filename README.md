@@ -18,6 +18,9 @@ After exporting the objects, overlay them with the point grid on your local work
 
 You may also want to create a column to take notes about the quality of the objects. Pure objects can be used for training and validation, while mixed (over-segmented) or shifted objects can only be used for validation.
 
+  **Calculate the texture metrics.**
+  -------------------------------------------------------------------------------------------------------------------
+
 
 Use the code in **texCal** to calculate second-order texture metrics from Corona imagery. They will later be used as input layers for object-oriented classification.
 
@@ -26,7 +29,6 @@ Follow the instructions within the code.
 If you decide to divide your image into several geometries, you may start with a larger size geometry first and if processing results in an error, you may decrease the geometry size. With time, the sizes of the geometries will be intuitive. For reference, check the sizes of my geometries within the same code.
 
 If you divided your image into several geometries, use the code in **texMer** to merge the separate exported texture layers into one texture layer for each of the chosen second-order texture metrics. 
-
 
 
 
@@ -46,13 +48,18 @@ Merge the three layers (test, mis-segmented and shifted) and export them as Test
 
 Always check the number of points in the resulting shapefiles to prevent any errors.
 
+Use previously exported objects for visual identification only. Do not import objects as training/testing data, since this will either fail, or overestimate the classes with larger objects).
+
 **Import labeled points in GEE.**
 -------------------------------------------------------------------------------------------------------------------
-
 
 Import the point data in GEE in separate folders for *Training* and *Testing*. 
 
 GEE -> Assets -> New -> Shapefiles: Drag and drop each set one-by-one (10 files for TrainingMMDDYYYY_1, then 10 files for TestingMMDDYYYY_1, etc.); add the Folder name in front of the Asset name (would look like: Training/TrainingMMDDYYYY_1); Click “Upload”.
+
+
+Use the code in **OBIA_10111040_10fold** to run a ten-fold object-oriented classification of Corona data with a DEM. 
+-------------------------------------------------------------------------------------------------------------------
 
 Follow the instructions provided in the beginning of the code. 
 
@@ -61,12 +68,6 @@ Due to memory limits depending on the size of your study area, the resulting map
 
 <a target="_blank" href="https://rizayeva.users.earthengine.app/view/coronaclassificationvisualization">Click here to visualize</a> the results of the classification and the accuracy assessments for each  method used in our paper.
 
-
-Use the code in **OBIA_10111040_10fold** to run a ten-fold object-oriented classification of Corona data with a DEM. 
--------------------------------------------------------------------------------------------------------------------
-
-
-Use previously exported objects for visual identification only. Do not import objects as training/testing data, since this will either fail, or overestimate the classes with larger objects).
 
 Should you have any questions, do not hesitate to reach out: rizayeva@wisc.edu
 
