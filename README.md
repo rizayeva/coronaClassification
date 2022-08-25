@@ -6,8 +6,9 @@ Historical Corona satellite imagery classification within GEE
 *****This page hasn't yet been published or shared at this point*****
 
   **Generate a point grid.**
+  -------------------------------------------------------------------------------------------------------------------
   
-  Import the point grid in GEE as a FeatureCollection (Assets -> New -> Shape files). Be sure to add all auxiliary files and not only the .shp file.
+Import the point grid in GEE as a FeatureCollection (Assets -> New -> Shape files). Be sure to add all auxiliary files and not only the .shp file.
 
 Import the images to GEE (with the correct projection and 1 band). If the rasters are too large for GEE, apply a JPEG or LZW compression. For this, use OSGeo and follow the steps in **shellCode**.
 
@@ -48,6 +49,8 @@ Merge the three layers (test, mis-segmented and shifted) and export them as Test
 Always check the number of points in the resulting shapefiles to prevent any errors.
 
 **Import labeled points in GEE.**
+-------------------------------------------------------------------------------------------------------------------
+
 
 Import the point data in GEE in separate folders for *Training* and *Testing*. 
 
