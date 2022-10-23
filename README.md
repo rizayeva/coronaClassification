@@ -55,9 +55,10 @@ Import the point data in GEE in separate folders for *Training* and *Testing*.
 
 GEE -> Assets -> New -> Shapefiles: Drag and drop each set one-by-one (10 files for TrainingMMDDYYYY_1, then 10 files for TestingMMDDYYYY_1, etc.); add the Folder name in front of the Asset name (would look like: Training/TrainingMMDDYYYY_1); Click “Upload”.
 
-
-Use the code in **Object-oriented classification** to run four scenarios of ten-fold Monte Carlo object-oriented classifications of Corona data. 
+Run classifications
 -------------------------------------------------------------------------------------------------------------------
+
+Use the codes in **Pixel-based classification** or **Object-oriented classification** to run four scenarios of ten-fold Monte Carlo oriented classifications of Corona data for each method. 
 
 Follow the instructions provided in the beginning of the code. 
 
