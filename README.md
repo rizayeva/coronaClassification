@@ -1,6 +1,6 @@
 
 <h1>
-Historical Corona satellite imagery classification within GEE
+Historical Corona satellite imagery classifications within GEE
 </h1>
 
   **Collect training data.**
