@@ -3,8 +3,6 @@
 Historical Corona satellite imagery classification within GEE
 </h1>
 
-*****This page hasn't yet been published or shared at this point*****
-
   **Generate a point grid.**
   -------------------------------------------------------------------------------------------------------------------
   
@@ -58,7 +56,7 @@ Import the point data in GEE in separate folders for *Training* and *Testing*.
 GEE -> Assets -> New -> Shapefiles: Drag and drop each set one-by-one (10 files for TrainingMMDDYYYY_1, then 10 files for TestingMMDDYYYY_1, etc.); add the Folder name in front of the Asset name (would look like: Training/TrainingMMDDYYYY_1); Click “Upload”.
 
 
-Use the code in **OBIA_10111040_10fold** to run a ten-fold object-oriented classification of Corona data with a DEM. 
+Use the code in **Object-oriented classification** to run four scenarios of ten-fold Monte Carlo object-oriented classifications of Corona data. 
 -------------------------------------------------------------------------------------------------------------------
 
 Follow the instructions provided in the beginning of the code. 
@@ -66,7 +64,7 @@ Follow the instructions provided in the beginning of the code.
 Due to memory limits depending on the size of your study area, the resulting maps may not be possible to visualize right away. In that case please export the maps and the accuracy results to Assets or Drive.
 
 
-<a target="_blank" href="https://rizayeva.users.earthengine.app/view/coronaclassificationvisualization">Click here to visualize</a> the results of the classification and the accuracy assessments for each  method used in our paper.
+<a target="_blank" href="https://rizayeva.users.earthengine.app/view/coronaclassificationvisualization">Click here to visualize</a> the results of the classification and the accuracy assessments for each method and scenario used in our paper.
 
 
 Should you have any questions, do not hesitate to reach out: rizayeva@wisc.edu
