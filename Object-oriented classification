@@ -1,0 +1,718 @@
+/*  Author: Afag Rizayeva
+    Date: 01-17-2022
+    Purpose: Ten fold object-based classification of Corona data
+    Inputs: Corona image geometry (study area polygon);
+            2 Corona image layers manually imported in GEE;
+            texture layers;
+            2.5m elevation layer;
+            training data directory;
+            testing data directory;
+
+    Adjust the input files' directories and palette variable
+    Run the code
+    Export the accuracies as csv files and the final classification maps
+*/
+var table = ee.FeatureCollection('users/rizayeva/DS10111041');
+
+//     Import and visualize textures
+var entropy_DA = ee.Image('users/rizayeva/GLCM/entropy_DA').toFloat();
+var entropy_DF = ee.Image('users/rizayeva/GLCM/entropy_DF').toFloat();
+var homogeneity_DA = ee.Image('users/rizayeva/GLCM/homogeneity_DA').toFloat();
+var homogeneity_DF = ee.Image('users/rizayeva/GLCM/homogeneity_DF').toFloat();
+var angularSecondMoment_DA = ee.Image('users/rizayeva/GLCM/angularSecondMoment_DA').toFloat();
+var angularSecondMoment_DF = ee.Image('users/rizayeva/GLCM/angularSecondMoment_DF').toFloat();
+print('img band names', entropy_DA.bandNames()); // ee.List of band names
+
+//     Set the palette based on number and names of classes
+var palette = ['075b0e'/* forest*/,  '075b0e'/* forest*/, '075b0e'/* forest*/, 'ebebeb'/* barren*/, '9de64e'/* grass*/, 'e2d544'/* crop*/, 'ff0000'/* urban*/, '3f553c'/* wetland*/, '0033ff'/* lake*/, 'ffffff'/* snow*/, '88cdf6'/* river*/];
+
+//     Import two Corona images
+//     Rename the band names for afterward- ('da') and forward-facing ('df') cameras
+var image2 = ee.Image('users/rizayeva/corona_2_5m/DS1011-1040DA_2_5m_JPEG_1band_EPSG32638').rename(['ds10111040da']);
+var image3 = ee.Image('users/rizayeva/corona_2_5m/DS1011-1040DF_2_5m_JPEG_1band_EPSG32638').rename(['ds10111040df']);
+Map.addLayer(image2, {min: 0, max: 200}, 'DS1011-1040DA', false);
+Map.addLayer(image3, {min: 0, max: 200}, 'DS1011-1040DF', false);
+
+// //     Build the image geometry
+// var geometry10111040 = image2.addBands(image3).geometry();
+// Map.addLayer(geometry10111040, {}, 'geometry10111040', false);
+
+//     Define and visualize the elevation layers
+var elevation = ee.Image('users/rizayeva/elevation_2_5m').rename('elevation');
+var slope = ee.Terrain.slope(elevation).clip(table);
+var aspect = ee.Terrain.aspect(elevation).clip(table);
+var aspect = aspect.subtract(30).multiply(Math.PI/180).cos().subtract(1).multiply(-1/2);
+
+var imageVisParams = {bands: ['elevation'], min: 1, max: 3445,  gamma: [1.85], opacity: 1};
+Map.addLayer(elevation, imageVisParams, 'Elevation', false);
+Map.addLayer(slope, {}, 'slope', false);
+Map.addLayer(aspect, {}, 'aspect', false);
+
+//     Concatenate the two images, so that we have one image with two bands
+var img = ee.Image.cat([image2, image3]);
+// print('img', img);
+var img = ee.Image(img).divide(255);
+var bandNames = img.bandNames();
+print('img band names', bandNames); // ee.List of band names
+Map.addLayer(img, {bands: ["ds10111040df", "ds10111040df", "ds10111040da"], gamma: 0.8}, 'DS1011-1040', false);
+Map.centerObject(img.geometry(), 7);
+
+///////////// Segmentation
+
+//     Set the seed grid size
+var seeds = ee.Algorithms.Image.Segmentation.seedGrid(40);
+
+//     Run SNIC on the regular square grid.
+var snic = ee.Algorithms.Image.Segmentation.SNIC({
+  image: img, 
+  size: 32,
+  compactness: 0.1,
+  connectivity: 4,
+  neighborhoodSize:256,
+  seeds: seeds
+}).select(['ds10111040da_mean', 'ds10111040df_mean', 'clusters'], ['ds10111040da', 'ds10111040df', 'clusters']);//.reproject({crs: 'EPSG:4326', scale: 18});
+// var snicbandNames = snic.bandNames();
+// print('Snic band names: ', snicbandNames); // ee.List of band names
+
+//     Select clusters from segmentation results
+var clusters = snic.select('clusters').reproject({crs: 'EPSG:4326', scale: 18});
+//Map.addLayer(clusters.randomVisualizer(), {}, 'clusters', false)
+Map.addLayer(snic, {bands: ['ds10111040da', 'ds10111040df'/*, 'b1_2', 'b1_3'*/], min:0, max:1, gamma: 0.8}, 'means', false);
+
+//     Compute per-cluster StdDev, Area, Perimeter, Width and Height, Shape, Texture metrics and Elevation layers
+var stdDev = img.addBands(clusters).reduceConnectedComponents(ee.Reducer.stdDev(), 'clusters', 1024).select(['ds10111040da', 'ds10111040df'], ['ds10111040da_StdDev', 'ds10111040df_StdDev']).reproject({crs: 'EPSG:4326', scale: 18});
+Map.addLayer(stdDev, {min:0, max:0.1}, 'StdDev', false);
+var area = ee.Image.pixelArea().addBands(clusters).reduceConnectedComponents(ee.Reducer.sum(), 'clusters', 1024).reproject({crs: 'EPSG:4326', scale: 18});
+Map.addLayer(area, {min:50000, max: 500000}, 'Cluster Area', false);
+var minMax = clusters.reduceNeighborhood(ee.Reducer.minMax(), ee.Kernel.square(1)).reproject({crs: 'EPSG:4326', scale: 18}).reproject({crs: 'EPSG:4326', scale: 18});
+var perimeterPixels = minMax.select(0).neq(minMax.select(1)).rename('perimeter').reproject({crs: 'EPSG:4326', scale: 18});
+Map.addLayer(perimeterPixels, {min: 0, max: 1, opacity: 0.5, palette: ['000000', 'ffffff']}, 'perimeterPixels', false);
+var perimeter = perimeterPixels.addBands(clusters).reduceConnectedComponents(ee.Reducer.sum(), 'clusters', 1024).reproject({crs: 'EPSG:4326', scale: 18});
+Map.addLayer(perimeter, {min: 100, max: 400}, 'Perimeter size', false);
+var sizes = ee.Image.pixelLonLat().addBands(clusters).reduceConnectedComponents(ee.Reducer.minMax(), 'clusters', 1024).reproject({crs: 'EPSG:4326', scale: 18});
+var width = sizes.select('longitude_max').subtract(sizes.select('longitude_min')).rename('width').reproject({crs: 'EPSG:4326', scale: 18});
+var height = sizes.select('latitude_max').subtract(sizes.select('latitude_min')).rename('height').reproject({crs: 'EPSG:4326', scale: 18}).reproject({crs: 'EPSG:4326', scale: 18});
+Map.addLayer(width, {min:0, max:0.02}, 'Cluster width', false);
+Map.addLayer(height, {min:0, max:0.02}, 'Cluster height', false);
+var shape = area.sqrt().divide(perimeter).select(['area'], ['shape']).reproject({crs: 'EPSG:4326', scale: 18});
+Map.addLayer(shape, {}, 'shape', false);
+var entropyDA = entropy_DA.addBands(clusters).reduceConnectedComponents(ee.Reducer.mean(), 'clusters', 1024).reproject({crs: 'EPSG:4326', scale: 18});
+Map.addLayer(entropyDA, null, 'entropyDA', false);
+var entropyDF = entropy_DF.addBands(clusters).reduceConnectedComponents(ee.Reducer.mean(), 'clusters', 1024).reproject({crs: 'EPSG:4326', scale: 18});
+Map.addLayer(entropyDF, null, 'entropyDF', false);
+var homogeneityDA = homogeneity_DA.addBands(clusters).reduceConnectedComponents(ee.Reducer.mean(), 'clusters', 1024).reproject({crs: 'EPSG:4326', scale: 18});
+Map.addLayer(homogeneityDA, null, 'homogeneityDA', false);
+var homogeneityDF = homogeneity_DF.addBands(clusters).reduceConnectedComponents(ee.Reducer.mean(), 'clusters', 1024).reproject({crs: 'EPSG:4326', scale: 18});
+Map.addLayer(homogeneityDF, null, 'homogeneityDF', false);
+var angularSecondMomentDA = angularSecondMoment_DA.addBands(clusters).reduceConnectedComponents(ee.Reducer.mean(), 'clusters', 1024).reproject({crs: 'EPSG:4326', scale: 18});
+Map.addLayer(angularSecondMomentDA, null, 'angularSecondMomentDA', false);
+var angularSecondMomentDF = angularSecondMoment_DF.addBands(clusters).reduceConnectedComponents(ee.Reducer.mean(), 'clusters', 1024).reproject({crs: 'EPSG:4326', scale: 18});
+Map.addLayer(angularSecondMomentDF, null, 'angularSecondMomentDF', false);
+var elevation_10111040 = elevation.addBands(clusters).reduceConnectedComponents(ee.Reducer.mean(), 'clusters', 1024).reproject({crs: 'EPSG:4326', scale: 18});
+Map.addLayer(elevation_10111040, {}, 'elevation_10111040', false);
+var slope_10111040 = slope.addBands(clusters).reduceConnectedComponents(ee.Reducer.mean(), 'clusters', 1024).reproject({crs: 'EPSG:4326', scale: 18});
+Map.addLayer(slope_10111040, {}, 'slope_10111040', false);
+var aspect_10111040 = aspect.addBands(clusters).reduceConnectedComponents(ee.Reducer.mean(), 'clusters', 1024).reproject({crs: 'EPSG:4326', scale: 18});
+Map.addLayer(aspect_10111040, {}, 'aspect_10111040', false);
+
+//     Map asset directory that contains all Training and Testing data
+var assetIdTR='users/rizayeva/Training_Testing/Training10111040';
+var assetIdTE='users/rizayeva/Training_Testing/Testing10111040';
+
+//     Make a list that contains all the point data in the asset directory
+var assetListTR = ee.List(ee.data.getList({'id':assetIdTR}));
+var assetListTE = ee.List(ee.data.getList({'id':assetIdTE}));
+print('Training data', assetListTR);
+print('Testing data', assetListTE);
+//     Define the number of datasets
+var n = assetListTR.size().getInfo();
+
+
+///////////// Classification
+///////////// ///////////// ///////////// ///////////// ///////////// no DEM no GEO
+//     Concatenate all layers into one 
+var objectPropertiesImage = ee.Image.cat([
+  snic.select(['ds10111040da', 'ds10111040df']),
+  stdDev,
+  entropyDA,
+  entropyDF,
+  homogeneityDA,
+  homogeneityDF,
+  angularSecondMomentDA,
+  angularSecondMomentDF
+  ]).float();
+// print (objectPropertiesImage);
+var bandNames = objectPropertiesImage.bandNames();
+print('objectPropertiesImage bandNames noDEMnoGEO', bandNames);
+var bandss = ['ds10111040da', 'ds10111040df', 'ds10111040da_StdDev', 'ds10111040df_StdDev', 'ds10111040da_ent', 'ds10111040df_ent', 'ds10111040da_idm', 'ds10111040df_idm', 'ds10111040da_asm', 'ds10111040df_asm'];
+
+//     Generate an empty Image Collection to later add each of the 10 classification results
+  var classification = ee.ImageCollection([]);
+//     Generate an empty list to later add each of the overall accuracies to be averaged
+  var overallAccuracy = ee.List([]);
+//     Build a for loop to run a Random Forest classifier using one set of the training and testing data each time
+  for (var i=0; i<n; i++){
+//     Select the subsequent set of training data each time
+    var valueTR=ee.Dictionary(assetListTR.get(i));
+    var imgIDTR=ee.String(valueTR.get('id')).getInfo();
+    var train=ee.FeatureCollection(imgIDTR);
+    // print('train' + (i+1), train);
+    // trainingTR=training.merge(train)
+
+//     Overlay the points on the imagery to get training.
+var training = objectPropertiesImage.sampleRegions({
+  collection: train,
+  properties: ['Classes'],
+  scale: 2.5
+});
+
+//     Train a CART classifier with default parameters
+var classifier = ee.Classifier.smileRandomForest(100).train(training, 'Classes', bandss);
+
+//      Classify the image with the same bands used for training
+var classified = objectPropertiesImage.classify(classifier);
+// print('classified', classified); 
+// Map.addLayer(classified, {min: 1, max: 11, palette: palette}, 'Classification map' + (i+1), false);
+
+// //     Export the Image - uncomment if want to export each
+// Export.image.toAsset({
+//   image: classified.toByte(),//.toFloat(),
+//   description: "Obj_noDEMnoGEO" + (i+1),
+//   assetId: "Obj_noDEMnoGEO" + (i+1),
+//   scale: 2.5,
+//   region: table,
+//   maxPixels:1e13,
+// });
+
+//     Overall map
+classification=classification.merge(classified);
+
+//     Validation
+//     Select the subsequent set of testing data each time
+  var valueTE=ee.Dictionary(assetListTE.get(i));
+  var imgIDTE=ee.String(valueTE.get('id')).getInfo();
+  var test=ee.FeatureCollection(imgIDTE);
+  // print('test', test);
+  // testing=testing.merge(test)
+
+var validation = objectPropertiesImage.sampleRegions({
+  collection: test,
+  properties: ['Classes'],
+  scale: 2.5
+});
+var validated = validation.classify(classifier);
+
+//     Get a confusion matrix representing expected accuracy and an overall accuracy
+//     Uncomment the "print" commands if want to visualize the accuracies and matrices for each set of training and testing data in GEE console
+var testAccuracy = validated.errorMatrix('Classes', 'classification');
+var Matrix = ee.Feature(null, {matrix: testAccuracy.array()});
+// print('Validation error matrix noDEMnoGEO' + (i+1), testAccuracy);
+var overall = testAccuracy.accuracy();
+// print('Overall noDEMnoGEO' + (i+1), overall);
+
+// //    Export the matrix - uncomment if want to export each
+// Export.table.toDrive({
+//   collection: ee.FeatureCollection(Matrix),
+//   description:'testAccuracy_Obj_noDEMnoGEO' + (i+1),
+//   folder: 'testAccuracy',
+//   fileFormat: 'csv'
+// });
+
+//     Add subsequent overall accuracy with each loop, to initially empty "overallAccuracy" list
+overallAccuracy = overallAccuracy.add(overall);
+
+  }
+
+//     Image collection of classification results from each set of training data
+var classifiedX = classification;
+// print('Classification maps collection', classifiedX);
+
+//     Best map representing the most common pixel value based on all sets of training data
+var bestClassificationObj = classifiedX.mode();
+
+//     The following map may not load due to memory limits, but should succesfully export to Assets or Drive
+Map.addLayer(bestClassificationObj.toByte(), {min: 1, max: 11, palette: palette}, "Best object-oriented classification no DEM no GEO", false);
+
+//     Export the best map to Drive
+Export.image.toDrive({
+  image: bestClassificationObj.toByte(),
+  description: "Obj_noDEMnoGEO",
+  folder: "objectBasedClassifications",
+  scale: 2.5,
+  region: table,
+  maxPixels:1e13,
+});
+
+//     Calculate the average overall accuracy
+var overallAccuracyObj = ee.FeatureCollection(overallAccuracy.reduce(ee.Reducer.mean()));
+var overallAccuracyObjExp = ee.FeatureCollection(ee.Feature(null,{prop: overallAccuracyObj}));
+print('Overall accuracy noDEMnoGEO', overallAccuracyObjExp);
+
+//     Calculate the Standard Deviation based on overall accuracies from all training data
+var standardDeviation = ee.FeatureCollection(overallAccuracy.reduce(ee.Reducer.stdDev()));
+var standardDeviationExp = ee.FeatureCollection(ee.Feature(null,{prop: standardDeviation}));
+print('SD noDEMnoGEO', standardDeviationExp);
+
+//     The "print" function may not always work due to the memory limits
+//     To make sure it works, we can reduce the number of training and testing datasets used
+//     For example, use just two datasets (2 instead of n in the beginning of the for loop)
+//     Otherwise, it should always be possible to export them to Drive
+Export.table.toDrive({
+  collection: overallAccuracyObjExp,
+  description:'overallAccuracyObjnoDEMnoGEO10111040',
+  folder: 'classification_accuracies',
+  fileFormat: 'csv'
+});
+
+Export.table.toDrive({
+  collection: standardDeviationExp,
+  description:'standardDeviationObjnoDEMnoGEO10111040',
+  folder: 'classification_accuracies',
+  fileFormat: 'csv'
+});
+
+
+///////////// ///////////// ///////////// ///////////// ///////////// no DEM with GEO
+
+//     Concatenate all layers into one 
+var objectPropertiesImage = ee.Image.cat([
+  snic.select(['ds10111040da', 'ds10111040df']),
+  stdDev,
+  area,
+  perimeter,
+  width,
+  height,
+  shape,
+  entropyDA,
+  entropyDF,
+  homogeneityDA,
+  homogeneityDF,
+  angularSecondMomentDA,
+  angularSecondMomentDF
+  ]).float();
+// print (objectPropertiesImage);
+var bandNames = objectPropertiesImage.bandNames();
+print('objectPropertiesImage bandNames noDEMwGEO', bandNames);
+var bandss = ['ds10111040da', 'ds10111040df', 'ds10111040da_StdDev', 'ds10111040df_StdDev', 'area', 'perimeter', 'width', 'height', 'shape', 'ds10111040da_ent', 'ds10111040df_ent', 'ds10111040da_idm', 'ds10111040df_idm', 'ds10111040da_asm', 'ds10111040df_asm'];
+
+//     Generate an empty Image Collection to later add each of the 10 classification results
+  var classification = ee.ImageCollection([]);
+//     Generate an empty list to later add each of the overall accuracies to be averaged
+  var overallAccuracy = ee.List([]);
+//     Build a for loop to run a Random Forest classifier using one set of the training and testing data each time
+  for (var i=0; i<n; i++){
+//     Select the subsequent set of training data each time
+    var valueTR=ee.Dictionary(assetListTR.get(i));
+    var imgIDTR=ee.String(valueTR.get('id')).getInfo();
+    var train=ee.FeatureCollection(imgIDTR);
+    // print('train' + (i+1), train);
+    // trainingTR=training.merge(train)
+
+//     Overlay the points on the imagery to get training.
+var training = objectPropertiesImage.sampleRegions({
+  collection: train,
+  properties: ['Classes'],
+  scale: 2.5
+});
+
+//     Train a CART classifier with default parameters
+var classifier = ee.Classifier.smileRandomForest(100).train(training, 'Classes', bandss);
+
+//      Classify the image with the same bands used for training
+var classified = objectPropertiesImage.classify(classifier);
+// print('classified', classified); 
+// Map.addLayer(classified, {min: 1, max: 11, palette: palette}, 'Classification map' + (i+1), false);
+
+// //     Export the Image - uncomment if want to export each
+// Export.image.toAsset({
+//   image: classified.toByte(),//.toFloat(),
+//   description: "Obj_noDEMwGEO" + (i+1),
+//   assetId: "Obj_noDEMwGEO" + (i+1),
+//   scale: 2.5,
+//   region: table,
+//   maxPixels:1e13,
+// });
+
+//     Overall map
+classification=classification.merge(classified);
+
+//     Validation
+//     Select the subsequent set of testing data each time
+  var valueTE=ee.Dictionary(assetListTE.get(i));
+  var imgIDTE=ee.String(valueTE.get('id')).getInfo();
+  var test=ee.FeatureCollection(imgIDTE);
+  // print('test', test);
+  // testing=testing.merge(test)
+
+var validation = objectPropertiesImage.sampleRegions({
+  collection: test,
+  properties: ['Classes'],
+  scale: 2.5
+});
+var validated = validation.classify(classifier);
+
+//     Get a confusion matrix representing expected accuracy and an overall accuracy
+//     Uncomment the "print" commands if want to visualize the accuracies and matrices for each set of training and testing data in GEE console
+var testAccuracy = validated.errorMatrix('Classes', 'classification');
+var Matrix = ee.Feature(null, {matrix: testAccuracy.array()});
+// print('Validation error matrix_noDEMwGEO' + (i+1), testAccuracy);
+var overall = testAccuracy.accuracy();
+// print('Overall noDEMwGEO' + (i+1), overall);
+
+// //    Export the matrix - uncomment if want to export each
+// Export.table.toDrive({
+//   collection: ee.FeatureCollection(Matrix),
+//   description:'testAccuracy_Obj_noDEMwGEO' + (i+1),
+//   folder: 'testAccuracy',
+//   fileFormat: 'csv'
+// });
+
+//     Add subsequent overall accuracy with each loop, to initially empty "overallAccuracy" list
+overallAccuracy = overallAccuracy.add(overall);
+
+  }
+
+//     Image collection of classification results from each set of training data
+var classifiedX = classification;
+// print('Classification maps collection', classifiedX);
+
+//     Best map representing the most common pixel value based on all sets of training data
+var bestClassificationObj = classifiedX.mode();
+
+//     The following map may not load due to memory limits, but should succesfully export to Assets or Drive
+Map.addLayer(bestClassificationObj.toByte(), {min: 1, max: 11, palette: palette}, "Best object-oriented classification no DEM with GEO", false);
+
+//     Export the best map to Drive
+Export.image.toDrive({
+  image: bestClassificationObj.toByte(),
+  description: "Obj_noDEMwGEO",
+  folder: "objectBasedClassifications",
+  scale: 2.5,
+  region: table,
+  maxPixels:1e13,
+});
+
+//     Calculate the average overall accuracy
+var overallAccuracyObj = ee.FeatureCollection(overallAccuracy.reduce(ee.Reducer.mean()));
+var overallAccuracyObjExp = ee.FeatureCollection(ee.Feature(null,{prop: overallAccuracyObj}));
+print('Overall accuracy noDEMwGEO', overallAccuracyObjExp);
+
+//     Calculate the Standard Deviation based on overall accuracies from all training data
+var standardDeviation = ee.FeatureCollection(overallAccuracy.reduce(ee.Reducer.stdDev()));
+var standardDeviationExp = ee.FeatureCollection(ee.Feature(null,{prop: standardDeviation}));
+print('SD noDEMwGEO', standardDeviationExp);
+
+//     The "print" function may not always work due to the memory limits
+//     To make sure it works, we can reduce the number of training and testing datasets used
+//     For example, use just two datasets (2 instead of n in the beginning of the for loop)
+//     Otherwise, it should always be possible to export them to Drive
+Export.table.toDrive({
+  collection: overallAccuracyObjExp,
+  description:'overallAccuracyObjnoDEMwGEO10111040',
+  folder: 'classification_accuracies',
+  fileFormat: 'csv'
+});
+
+Export.table.toDrive({
+  collection: standardDeviationExp,
+  description:'standardDeviationObjnoDEMwGEO10111040',
+  folder: 'classification_accuracies',
+  fileFormat: 'csv'
+});
+
+///////////// ///////////// ///////////// ///////////// ///////////// with DEM no GEO
+
+//     Concatenate all layers into one 
+var objectPropertiesImage = ee.Image.cat([
+  snic.select(['ds10111040da', 'ds10111040df']),
+  stdDev,
+  entropyDA,
+  entropyDF,
+  homogeneityDA,
+  homogeneityDF,
+  angularSecondMomentDA,
+  angularSecondMomentDF,
+  elevation_10111040,
+  slope_10111040,
+  aspect_10111040
+  ]).float();
+// print (objectPropertiesImage);
+var bandNames = objectPropertiesImage.bandNames();
+print('objectPropertiesImage bandNames wDEMnoGEO', bandNames);
+var bandss = ['ds10111040da', 'ds10111040df', 'ds10111040da_StdDev', 'ds10111040df_StdDev', 'ds10111040da_ent', 'ds10111040df_ent', 'ds10111040da_idm', 'ds10111040df_idm', 'ds10111040da_asm', 'ds10111040df_asm', 'slope', 'aspect', 'elevation'];
+
+//     Generate an empty Image Collection to later add each of the 10 classification results
+  var classification = ee.ImageCollection([]);
+//     Generate an empty list to later add each of the overall accuracies to be averaged
+  var overallAccuracy = ee.List([]);
+//     Build a for loop to run a Random Forest classifier using one set of the training and testing data each time
+  for (var i=0; i<n; i++){
+//     Select the subsequent set of training data each time
+    var valueTR=ee.Dictionary(assetListTR.get(i));
+    var imgIDTR=ee.String(valueTR.get('id')).getInfo();
+    var train=ee.FeatureCollection(imgIDTR);
+    // print('train' + (i+1), train);
+    // trainingTR=training.merge(train)
+
+//     Overlay the points on the imagery to get training.
+var training = objectPropertiesImage.sampleRegions({
+  collection: train,
+  properties: ['Classes'],
+  scale: 2.5
+});
+
+//     Train a CART classifier with default parameters
+var classifier = ee.Classifier.smileRandomForest(100).train(training, 'Classes', bandss);
+
+//      Classify the image with the same bands used for training
+var classified = objectPropertiesImage.classify(classifier);
+// print('classified', classified); 
+// Map.addLayer(classified, {min: 1, max: 11, palette: palette}, 'Classification map' + (i+1), false);
+
+// //     Export the Image - uncomment if want to export each
+// Export.image.toAsset({
+//   image: classified.toByte(),//.toFloat(),
+//   description: "Obj_wDEMnoGEO" + (i+1),
+//   assetId: "Obj_wDEMnoGEO" + (i+1),
+//   scale: 2.5,
+//   region: table,
+//   maxPixels:1e13,
+// });
+
+//     Overall map
+classification=classification.merge(classified);
+
+//     Validation
+//     Select the subsequent set of testing data each time
+  var valueTE=ee.Dictionary(assetListTE.get(i));
+  var imgIDTE=ee.String(valueTE.get('id')).getInfo();
+  var test=ee.FeatureCollection(imgIDTE);
+  // print('test', test);
+  // testing=testing.merge(test)
+
+var validation = objectPropertiesImage.sampleRegions({
+  collection: test,
+  properties: ['Classes'],
+  scale: 2.5
+});
+var validated = validation.classify(classifier);
+
+//     Get a confusion matrix representing expected accuracy and an overall accuracy
+//     Uncomment the "print" commands if want to visualize the accuracies and matrices for each set of training and testing data in GEE console
+var testAccuracy = validated.errorMatrix('Classes', 'classification');
+var Matrix = ee.Feature(null, {matrix: testAccuracy.array()});
+// print('Validation error matrix_wDEMnoGEO' + (i+1), testAccuracy);
+var overall = testAccuracy.accuracy();
+// print('Overall wDEMnoGEO' + (i+1), overall);
+
+// //    Export the matrix - uncomment if want to export each
+// Export.table.toDrive({
+//   collection: ee.FeatureCollection(Matrix),
+//   description:'testAccuracy_Obj_wDEMnoGEO' + (i+1),
+//   folder: 'testAccuracy',
+//   fileFormat: 'csv'
+// });
+
+//     Add subsequent overall accuracy with each loop, to initially empty "overallAccuracy" list
+overallAccuracy = overallAccuracy.add(overall);
+
+  }
+
+//     Image collection of classification results from each set of training data
+var classifiedX = classification;
+// print('Classification maps collection', classifiedX);
+
+//     Best map representing the most common pixel value based on all sets of training data
+var bestClassificationObj = classifiedX.mode();
+
+//     The following map may not load due to memory limits, but should succesfully export to Assets or Drive
+Map.addLayer(bestClassificationObj.toByte(), {min: 1, max: 11, palette: palette}, "Best object-oriented classification with DEM no GEO", false);
+
+//     Export the best map to Drive
+Export.image.toDrive({
+  image: bestClassificationObj.toByte(),
+  description: "Obj_wDEMnoGEO",
+  folder: "objectBasedClassifications",
+  scale: 2.5,
+  region: table,
+  maxPixels:1e13,
+});
+
+//     Calculate the average overall accuracy
+var overallAccuracyObj = ee.FeatureCollection(overallAccuracy.reduce(ee.Reducer.mean()));
+var overallAccuracyObjExp = ee.FeatureCollection(ee.Feature(null,{prop: overallAccuracyObj}));
+print('Overall accuracy wDEMnoGEO', overallAccuracyObjExp);
+
+//     Calculate the Standard Deviation based on overall accuracies from all training data
+var standardDeviation = ee.FeatureCollection(overallAccuracy.reduce(ee.Reducer.stdDev()));
+var standardDeviationExp = ee.FeatureCollection(ee.Feature(null,{prop: standardDeviation}));
+print('SD wDEMnoGEO', standardDeviationExp);
+
+//     The "print" function may not always work due to the memory limits
+//     To make sure it works, we can reduce the number of training and testing datasets used
+//     For example, use just two datasets (2 instead of n in the beginning of the for loop)
+//     Otherwise, it should always be possible to export them to Drive
+Export.table.toDrive({
+  collection: overallAccuracyObjExp,
+  description:'overallAccuracyObjwDEMnoGEO10111040',
+  folder: 'classification_accuracies',
+  fileFormat: 'csv'
+});
+
+Export.table.toDrive({
+  collection: standardDeviationExp,
+  description:'standardDeviationObjwDEMnoGEO10111040',
+  folder: 'classification_accuracies',
+  fileFormat: 'csv'
+});
+
+///////////// ///////////// ///////////// ///////////// ///////////// with DEM with GEO
+
+//     Concatenate all layers into one 
+var objectPropertiesImage = ee.Image.cat([
+  snic.select(['ds10111040da', 'ds10111040df']),
+  stdDev,
+  area,
+  perimeter,
+  width,
+  height,
+  shape,
+  entropyDA,
+  entropyDF,
+  homogeneityDA,
+  homogeneityDF,
+  angularSecondMomentDA,
+  angularSecondMomentDF,
+  elevation_10111040,
+  slope_10111040,
+  aspect_10111040
+  ]).float();
+// print (objectPropertiesImage);
+var bandNames = objectPropertiesImage.bandNames();
+print('objectPropertiesImage bandNames wDEMwGEO', bandNames);
+var bandss = ['ds10111040da', 'ds10111040df', 'ds10111040da_StdDev', 'ds10111040df_StdDev', 'area', 'perimeter', 'width', 'height', 'shape', 'ds10111040da_ent', 'ds10111040df_ent', 'ds10111040da_idm', 'ds10111040df_idm', 'ds10111040da_asm', 'ds10111040df_asm', 'slope', 'aspect', 'elevation'];
+
+//     Generate an empty Image Collection to later add each of the 10 classification results
+  var classification = ee.ImageCollection([]);
+//     Generate an empty list to later add each of the overall accuracies to be averaged
+  var overallAccuracy = ee.List([]);
+//     Build a for loop to run a Random Forest classifier using one set of the training and testing data each time
+  for (var i=0; i<n; i++){
+//     Select the subsequent set of training data each time
+    var valueTR=ee.Dictionary(assetListTR.get(i));
+    var imgIDTR=ee.String(valueTR.get('id')).getInfo();
+    var train=ee.FeatureCollection(imgIDTR);
+    // print('train' + (i+1), train);
+    // trainingTR=training.merge(train)
+
+//     Overlay the points on the imagery to get training.
+var training = objectPropertiesImage.sampleRegions({
+  collection: train,
+  properties: ['Classes'],
+  scale: 2.5
+});
+
+//     Train a CART classifier with default parameters
+var classifier = ee.Classifier.smileRandomForest(100).train(training, 'Classes', bandss);
+
+//      Classify the image with the same bands used for training
+var classified = objectPropertiesImage.classify(classifier);
+// print('classified', classified); 
+// Map.addLayer(classified, {min: 1, max: 11, palette: palette}, 'Classification map' + (i+1), false);
+
+// //     Export the Image - uncomment if want to export each
+// Export.image.toAsset({
+//   image: classified.toByte(),//.toFloat(),
+//   description: "Obj_wDEMwGEO" + (i+1),
+//   assetId: "Obj_wDEMwGEO" + (i+1),
+//   scale: 2.5,
+//   region: table,
+//   maxPixels:1e13,
+// });
+
+//     Overall map
+classification=classification.merge(classified);
+
+//     Validation
+//     Select the subsequent set of testing data each time
+  var valueTE=ee.Dictionary(assetListTE.get(i));
+  var imgIDTE=ee.String(valueTE.get('id')).getInfo();
+  var test=ee.FeatureCollection(imgIDTE);
+  // print('test', test);
+  // testing=testing.merge(test)
+
+var validation = objectPropertiesImage.sampleRegions({
+  collection: test,
+  properties: ['Classes'],
+  scale: 2.5
+});
+var validated = validation.classify(classifier);
+
+//     Get a confusion matrix representing expected accuracy and an overall accuracy
+//     Uncomment the "print" commands if want to visualize the accuracies and matrices for each set of training and testing data in GEE console
+var testAccuracy = validated.errorMatrix('Classes', 'classification');
+var Matrix = ee.Feature(null, {matrix: testAccuracy.array()});
+// print('Validation error matrix_wDEMwGEO' + (i+1), testAccuracy);
+var overall = testAccuracy.accuracy();
+// print('Overall wDEMwGEO' + (i+1), overall);
+
+// //    Export the matrix - uncomment if want to export each
+// Export.table.toDrive({
+//   collection: ee.FeatureCollection(Matrix),
+//   description:'testAccuracy_Obj_wDEMwGEO' + (i+1),
+//   folder: 'testAccuracy',
+//   fileFormat: 'csv'
+// });
+
+//     Add subsequent overall accuracy with each loop, to initially empty "overallAccuracy" list
+overallAccuracy = overallAccuracy.add(overall);
+
+  }
+
+//     Image collection of classification results from each set of training data
+var classifiedX = classification;
+// print('Classification maps collection', classifiedX);
+
+//     Best map representing the most common pixel value based on all sets of training data
+var bestClassificationObj = classifiedX.mode();
+
+//     The following map may not load due to memory limits, but should succesfully export to Assets or Drive
+Map.addLayer(bestClassificationObj.toByte(), {min: 1, max: 11, palette: palette}, "Best object-oriented classification with DEM with GEO", false);
+
+//     Export the best map to Drive
+Export.image.toDrive({
+  image: bestClassificationObj.toByte(),
+  description: "Obj_wDEMwGEO",
+  folder: "objectBasedClassifications",
+  scale: 2.5,
+  region: table,
+  maxPixels:1e13,
+});
+
+//     Calculate the average overall accuracy
+var overallAccuracyObj = ee.FeatureCollection(overallAccuracy.reduce(ee.Reducer.mean()));
+var overallAccuracyObjExp = ee.FeatureCollection(ee.Feature(null,{prop: overallAccuracyObj}));
+print('Overall accuracy wDEMwGEO', overallAccuracyObjExp);
+
+//     Calculate the Standard Deviation based on overall accuracies from all training data
+var standardDeviation = ee.FeatureCollection(overallAccuracy.reduce(ee.Reducer.stdDev()));
+var standardDeviationExp = ee.FeatureCollection(ee.Feature(null,{prop: standardDeviation}));
+print('SD wDEMwGEO', standardDeviationExp);
+
+//     The "print" function may not always work due to the memory limits
+//     To make sure it works, we can reduce the number of training and testing datasets used
+//     For example, use just two datasets (2 instead of n in the beginning of the for loop)
+//     Otherwise, it should always be possible to export them to Drive
+Export.table.toDrive({
+  collection: overallAccuracyObjExp,
+  description:'overallAccuracyObjwDEMwGEO10111040',
+  folder: 'classification_accuracies',
+  fileFormat: 'csv'
+});
+
+Export.table.toDrive({
+  collection: standardDeviationExp,
+  description:'standardDeviationObjwDEMwGEO10111040',
+  folder: 'classification_accuracies',
+  fileFormat: 'csv'
+});
