@@ -25,7 +25,7 @@ Map.addLayer(image2, {min: 0, max: 200}, 'DS1011-1040DA', false);
 Map.addLayer(image3, {min: 0, max: 200}, 'DS1011-1040DF', false);
 
 //     Define and visualize the elevation layers
-var elevation = ee.Image('projects/SILVIS_UW/Afa/elevation_2_5m').rename('elevation');
+var elevation = ee.Image('users/rizayeva/elevation_2_5m').rename('elevation');
 var slope = ee.Terrain.slope(elevation).clip(table);
 var aspect = ee.Terrain.aspect(elevation).clip(table);
 var aspect = aspect.subtract(30).multiply(Math.PI/180).cos().subtract(1).multiply(-1/2);
