@@ -33,10 +33,6 @@ var image3 = ee.Image('users/rizayeva/corona_2_5m/DS1011-1040DF_2_5m_JPEG_1band_
 Map.addLayer(image2, {min: 0, max: 200}, 'DS1011-1040DA', false);
 Map.addLayer(image3, {min: 0, max: 200}, 'DS1011-1040DF', false);
 
-// //     Build the image geometry
-// var geometry10111040 = image2.addBands(image3).geometry();
-// Map.addLayer(geometry10111040, {}, 'geometry10111040', false);
-
 //     Define and visualize the elevation layers
 var elevation = ee.Image('users/rizayeva/elevation_2_5m').rename('elevation');
 var slope = ee.Terrain.slope(elevation).clip(table);
