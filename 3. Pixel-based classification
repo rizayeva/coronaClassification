@@ -1,1 +1,682 @@
+/*  Author: Afag Rizayeva
+    Date: 01-17-2022
+    Purpose: Ten fold pixel-based classification of Corona data with incorporation of DEM
+    Inputs: Corona image geometry (study area polygon);
+            2 Corona image layers manually imported in GEE;
+            2.5m elevation layer;
+            training data directory;
+            testing data directory;
+
+    Adjust the input files' directories and palette variable
+    Run the code
+    Export the accuracies as csv files and the final classification map
+*/
+
+var table = ee.FeatureCollection('users/rizayeva/DS10111041');
+
+//     Set the palette based on number and names of classes
+var palette = ['075b0e'/* forest*/,  '075b0e'/* forest*/, '075b0e'/* forest*/, 'ebebeb'/* barren*/, '9de64e'/* grass*/, 'e2d544'/* crop*/, 'ff0000'/* urban*/, '3f553c'/* wetland*/, '0033ff'/* lake*/, 'ffffff'/* snow*/, '88cdf6'/* river*/];
+
+//     Import two Corona images
+//     Rename the band names for afterward- ('da') and forward-facing ('df') cameras
+var image2 = ee.Image('users/rizayeva/corona_2_5m/DS1011-1040DA_2_5m_JPEG_1band_EPSG32638').rename(['ds10111040da']);
+var image3 = ee.Image('users/rizayeva/corona_2_5m/DS1011-1040DF_2_5m_JPEG_1band_EPSG32638').rename(['ds10111040df']);
+Map.addLayer(image2, {min: 0, max: 200}, 'DS1011-1040DA', false);
+Map.addLayer(image3, {min: 0, max: 200}, 'DS1011-1040DF', false);
+
+//     Define and visualize the elevation layers
+var elevation = ee.Image('projects/SILVIS_UW/Afa/elevation_2_5m').rename('elevation');
+var slope = ee.Terrain.slope(elevation).clip(table);
+var aspect = ee.Terrain.aspect(elevation).clip(table);
+var aspect = aspect.subtract(30).multiply(Math.PI/180).cos().subtract(1).multiply(-1/2);
+
+var imageVisParams = {bands: ['elevation'], min: 1, max: 3445,  gamma: [1.85], opacity: 1};
+Map.addLayer(elevation, imageVisParams, 'Elevation', false);
+Map.addLayer(slope, {}, 'slope', false);
+Map.addLayer(aspect, {}, 'aspect', false);
+
+var MN_DA = image2.reduceNeighborhood({
+  reducer: ee.Reducer.mean(),
+  kernel: ee.Kernel.square(3.5),
+});
+var MN_DF = image3.reduceNeighborhood({
+  reducer: ee.Reducer.mean(),
+  kernel: ee.Kernel.square(3.5),
+});
+var stdDevDA = image2.reduceNeighborhood({
+  reducer: ee.Reducer.stdDev(),
+  kernel: ee.Kernel.circle(3.5),
+});
+var stdDevDF = image3.reduceNeighborhood({
+  reducer: ee.Reducer.stdDev(),
+  kernel: ee.Kernel.circle(3.5),
+});
+
+// var texture = image2.glcmTexture({size: 4});
+// print(texture);
+var ENT_DA = image2.glcmTexture({size: 3/*4*/}).select('ds10111040da_ent');//.resample('bilinear').reproject({crs: image2.projection().getInfo()['crs'], scale: 16.5});
+var ENT_DF = image3.glcmTexture({size: 3/*4*/}).select('ds10111040df_ent');//.resample('bilinear').reproject({crs: image3.projection().getInfo()['crs'], scale: 16.5});
+var COR_DA = image2.glcmTexture({size: 3/*4*/}).select('ds10111040da_corr');//.resample('bilinear').reproject({crs: image2.projection().getInfo()['crs'], scale: 16.5});
+var COR_DF = image3.glcmTexture({size: 3/*4*/}).select('ds10111040df_corr');//.resample('bilinear').reproject({crs: image3.projection().getInfo()['crs'], scale: 16.5});
+var HOM_DA = image2.glcmTexture({size: 3/*4*/}).select('ds10111040da_idm');//.resample('bilinear').reproject({crs: image2.projection().getInfo()['crs'], scale: 16.5});
+var HOM_DF = image3.glcmTexture({size: 3/*4*/}).select('ds10111040df_idm');//.resample('bilinear').reproject({crs: image3.projection().getInfo()['crs'], scale: 16.5});
+var SM_DA = image2.glcmTexture({size: 3/*5*/}).select('ds10111040da_asm');//.resample('bilinear').reproject({crs: image2.projection().getInfo()['crs'], scale: 20.12});
+var SM_DF = image3.glcmTexture({size: 3/*5*/}).select('ds10111040df_asm');//.resample('bilinear').reproject({crs: image3.projection().getInfo()['crs'], scale: 20.12});
+var VAR_DA = image2.glcmTexture({size: 3/*5*/}).select('ds10111040da_var');//.resample('bilinear').reproject({crs: image2.projection().getInfo()['crs'], scale: 20.12});
+var VAR_DF = image3.glcmTexture({size: 3/*5*/}).select('ds10111040df_var');//.resample('bilinear').reproject({crs: image3.projection().getInfo()['crs'], scale: 20.12});
+var DIS_DA = image2.glcmTexture({size: 3/*5*/}).select('ds10111040da_diss');//.resample('bilinear').reproject({crs: image2.projection().getInfo()['crs'], scale: 20.12});
+var DIS_DF = image3.glcmTexture({size: 3/*5*/}).select('ds10111040df_diss');//.resample('bilinear').reproject({crs: image3.projection().getInfo()['crs'], scale: 20.12});
+Map.addLayer(MN_DA, {}, 'MN_DA', false);
+Map.addLayer(MN_DF, {}, 'MN_DF', false);
+Map.addLayer(ENT_DA, {}, 'ENT_DA', false);
+Map.addLayer(ENT_DF, {}, 'ENT_DF', false);
+Map.addLayer(SM_DA, {}, 'SM_DA', false);
+Map.addLayer(SM_DF, {}, 'SM_DF', false);
+Map.addLayer(COR_DA, {}, 'COR_DA', false);
+Map.addLayer(COR_DF, {}, 'COR_DF', false);
+Map.addLayer(HOM_DA, {}, 'HOM_DA', false);
+Map.addLayer(HOM_DF, {}, 'HOM_DF', false);
+Map.addLayer(VAR_DA, {}, 'VAR_DA', false);
+Map.addLayer(VAR_DF, {}, 'VAR_DF', false);
+Map.addLayer(DIS_DA, {}, 'DIS_DA', false);
+Map.addLayer(DIS_DF, {}, 'DIS_DF', false);
+
+//     Map asset directory that contains all Training and Testing data
+var assetIdTR='users/rizayeva/Training_Testing/Training10111040';
+var assetIdTE='users/rizayeva/Training_Testing/Testing10111040';
+
+//     Make a list that contains all the point data in the asset directory
+var assetListTR = ee.List(ee.data.getList({'id':assetIdTR}));
+var assetListTE = ee.List(ee.data.getList({'id':assetIdTE}));
+print('Training data', assetListTR);
+print('Testing data', assetListTE);
+//     Define the number of datasets
+var n = assetListTR.size().getInfo();
+
+///////////// Classification
+///////////// ///////////// ///////////// ///////////// ///////////// 5 TEX no DEM
+//     Concatenate all layers into one 
+var pixelPropertiesImage = ee.Image.cat([
+  MN_DA,
+  MN_DF,
+  stdDevDA,
+  stdDevDF,
+  ENT_DA,
+  ENT_DF,
+  HOM_DA,
+  HOM_DF,
+  SM_DA,
+  SM_DF
+  ]).float();
+// print (pixelPropertiesImage);
+var bandNames = pixelPropertiesImage.bandNames();
+print('pixelPropertiesImage bandNames with 5 textures no DEM', bandNames);
+var bandss = ['ds10111040da_mean', 'ds10111040df_mean', 'ds10111040da_stdDev', 'ds10111040df_stdDev', 'ds10111040da_asm', 'ds10111040df_asm', 'ds10111040da_ent', 'ds10111040df_ent', 'ds10111040da_idm', 'ds10111040df_idm'];
+
+//     Generate an empty Image Collection to later add each of the 10 classification results
+  var classification = ee.ImageCollection([]);
+//     Generate an empty list to later add each of the overall accuracies to be averaged
+  var overallAccuracy = ee.List([]);
+//     Build a for loop to run a Random Forest classifier using one set of the training and testing data each time
+  for (var i=0; i<n; i++){
+//     Select the subsequent set of training data each time
+    var valueTR=ee.Dictionary(assetListTR.get(i));
+    var imgIDTR=ee.String(valueTR.get('id')).getInfo();
+    var train=ee.FeatureCollection(imgIDTR);
+    // print('train', train);
+    // trainingTR=training.merge(train)
+
+//     Overlay the points on the imagery to get training.
+var training = pixelPropertiesImage.sampleRegions({
+  collection: train,
+  properties: ['Classes'],
+  scale: 2.5
+});
+
+//     Train a CART classifier with default parameters
+var classifier = ee.Classifier.smileRandomForest(100).train(training, 'Classes', bandss);
+
+//      Classify the image with the same bands used for training
+var classified = pixelPropertiesImage.classify(classifier);
+// print('classified', classified); 
+// Map.addLayer(classified, {min: 1, max: 11, palette: palette}, 'Classification map with 5 textures no DEM' + (i+1), false);
+
+// //     Export the Image - uncomment if want to export each
+// Export.image.toAsset({
+//   image: classified.toByte(),//.toFloat(),
+//   description: "classification_pixel_5TEXnoDEM" + (i+1),
+//   assetId: "classification_pixel_5TEXnoDEM" + (i+1),
+//   scale: 2.5,
+//   region: geometry10111040,
+//   maxPixels:1e13,
+// });
+
+//     Overall map
+classification=classification.merge(classified);
+
+//     Validation
+//     Select the subsequent set of testing data each time
+  var valueTE=ee.Dictionary(assetListTE.get(i));
+  var imgIDTE=ee.String(valueTE.get('id')).getInfo();
+  var test=ee.FeatureCollection(imgIDTE);
+  // print('test', test);
+  // testing=testing.merge(test)
+
+var validation = pixelPropertiesImage.sampleRegions({
+  collection: test,
+  properties: ['Classes'],
+  scale: 2.5
+});
+var validated = validation.classify(classifier);
+
+//     Get a confusion matrix representing expected accuracy and an overall accuracy
+//     Uncomment the "print" commands if want to visualize the accuracies and matrices for each set of training and testing data in GEE console
+var testAccuracy = validated.errorMatrix('Classes', 'classification');
+var Matrix = ee.Feature(null, {matrix: testAccuracy.array()});
+// print('Validation error matrix with 5 textures no DEM' + (i+1), testAccuracy);
+var overall = testAccuracy.accuracy();
+// print('Overall' + (i+1), overall);
+
+// //    Export the matrix - uncomment if want to export each
+// Export.table.toDrive({
+//   collection: ee.FeatureCollection(Matrix),
+//   description:'testAccuracy_pixel08122021_wDEM' + (i+1),
+//   folder: 'testAccuracy',
+//   fileFormat: 'csv'
+// });
+
+//     Add subsequent overall accuracy with each loop, to initially empty "overallAccuracy" list
+overallAccuracy = overallAccuracy.add(overall);
+
+  }
+
+//     Image collection of classification results from each set of training data
+var classifiedX = classification;
+// print('Classification maps collection', classifiedX);
+
+//     Best map representing the most common pixel value based on all sets of training data
+var bestClassificationPxl = classifiedX.mode();
+
+//     The following map may not load due to memory limits, but should succesfully export to Assets or Drive
+Map.addLayer(bestClassificationPxl.toByte(), {min: 1, max: 11, palette: palette}, "Best pixel-based classification with 5 textures no DEM", false);
+
+//     Export the best map to Drive
+Export.image.toDrive({
+  image: bestClassificationPxl.toByte(),
+  description: "Pxl_5TEXnoDEM",
+  folder: "pixelBasedClassifications",
+  scale: 2.5,
+  region: table,
+  maxPixels:1e13,
+});
+
+//     Calculate the average overall accuracy
+var overallAccuracyPxl = ee.FeatureCollection(overallAccuracy.reduce(ee.Reducer.mean()));
+print('Overall accuracy with 5 textures no DEM', overallAccuracyPxl);
+
+//     Calculate the Standard Deviation based on overall accuracies from all training data
+var standardDeviation = ee.FeatureCollection(overallAccuracy.reduce(ee.Reducer.stdDev()));
+print('SD with 5 textures no DEM', standardDeviation);
+
+//     The "print" function may not always work due to the
+//     To make sure it works, we can reduce the number of training and testing datasets used
+//     For example, use just two datasets (2 instead of n in the beginning of the for loop)
+//     Otherwise, it should always be possible to export them to Drive
+Export.table.toDrive({
+  collection: overallAccuracyPxl,
+  description:'overallAccuracyPxl5TEXnoDEM10111040',
+  folder: 'classification_accuracies',
+  fileFormat: 'csv'
+});
+
+Export.table.toDrive({
+  collection: standardDeviation,
+  description:'standardDeviationPxl5TEXnoDEM10111040',
+  folder: 'classification_accuracies',
+  fileFormat: 'csv'
+});
+
+///////////// ///////////// ///////////// ///////////// ///////////// 8 TEX no DEM
+//     Concatenate all layers into one 
+var pixelPropertiesImage = ee.Image.cat([
+  MN_DA,
+  MN_DF,
+  stdDevDA,
+  stdDevDF,
+  ENT_DA,
+  ENT_DF,
+  HOM_DA,
+  HOM_DF,
+  SM_DA,
+  SM_DF,
+  VAR_DA,
+  VAR_DF,
+  DIS_DA,
+  DIS_DF,
+  COR_DA,
+  COR_DF
+  ]).float();
+// print (pixelPropertiesImage);
+var bandNames = pixelPropertiesImage.bandNames();
+print('pixelPropertiesImage bandNames with 8 textures no DEM', bandNames);
+var bandss = ['ds10111040da_mean', 'ds10111040df_mean', 'ds10111040da_stdDev', 'ds10111040df_stdDev', 'ds10111040da_asm', 'ds10111040df_asm', 'ds10111040da_var', 'ds10111040df_var', 'ds10111040da_diss', 'ds10111040df_diss', 'ds10111040da_ent', 'ds10111040df_ent', 'ds10111040da_corr', 'ds10111040df_corr', 'ds10111040da_idm', 'ds10111040df_idm'];
+
+//     Generate an empty Image Collection to later add each of the 10 classification results
+  var classification = ee.ImageCollection([]);
+//     Generate an empty list to later add each of the overall accuracies to be averaged
+  var overallAccuracy = ee.List([]);
+//     Build a for loop to run a Random Forest classifier using one set of the training and testing data each time
+  for (var i=0; i<n; i++){
+//     Select the subsequent set of training data each time
+    var valueTR=ee.Dictionary(assetListTR.get(i));
+    var imgIDTR=ee.String(valueTR.get('id')).getInfo();
+    var train=ee.FeatureCollection(imgIDTR);
+    // print('train', train);
+    // trainingTR=training.merge(train)
+
+//     Overlay the points on the imagery to get training.
+var training = pixelPropertiesImage.sampleRegions({
+  collection: train,
+  properties: ['Classes'],
+  scale: 2.5
+});
+
+//     Train a CART classifier with default parameters
+var classifier = ee.Classifier.smileRandomForest(100).train(training, 'Classes', bandss);
+
+//      Classify the image with the same bands used for training
+var classified = pixelPropertiesImage.classify(classifier);
+// print('classified', classified); 
+// Map.addLayer(classified, {min: 1, max: 11, palette: palette}, 'Classification map with 8 textures no DEM' + (i+1), false);
+
+// //     Export the Image - uncomment if want to export each
+// Export.image.toAsset({
+//   image: classified.toByte(),//.toFloat(),
+//   description: "classification_pixel_8TEXnoDEM" + (i+1),
+//   assetId: "classification_pixel_8TEXnoDEM" + (i+1),
+//   scale: 2.5,
+//   region: geometry10111040,
+//   maxPixels:1e13,
+// });
+
+//     Overall map
+classification=classification.merge(classified);
+
+//     Validation
+//     Select the subsequent set of testing data each time
+  var valueTE=ee.Dictionary(assetListTE.get(i));
+  var imgIDTE=ee.String(valueTE.get('id')).getInfo();
+  var test=ee.FeatureCollection(imgIDTE);
+  // print('test', test);
+  // testing=testing.merge(test)
+
+var validation = pixelPropertiesImage.sampleRegions({
+  collection: test,
+  properties: ['Classes'],
+  scale: 2.5
+});
+var validated = validation.classify(classifier);
+
+//     Get a confusion matrix representing expected accuracy and an overall accuracy
+//     Uncomment the "print" commands if want to visualize the accuracies and matrices for each set of training and testing data in GEE console
+var testAccuracy = validated.errorMatrix('Classes', 'classification');
+var Matrix = ee.Feature(null, {matrix: testAccuracy.array()});
+// print('Validation error matrix with 8 textures no DEM' + (i+1), testAccuracy);
+var overall = testAccuracy.accuracy();
+// print('Overall' + (i+1), overall);
+
+// //    Export the matrix - uncomment if want to export each
+// Export.table.toDrive({
+//   collection: ee.FeatureCollection(Matrix),
+//   description:'testAccuracy_pixel08122021_wDEM' + (i+1),
+//   folder: 'testAccuracy',
+//   fileFormat: 'csv'
+// });
+
+//     Add subsequent overall accuracy with each loop, to initially empty "overallAccuracy" list
+overallAccuracy = overallAccuracy.add(overall);
+
+  }
+
+//     Image collection of classification results from each set of training data
+var classifiedX = classification;
+// print('Classification maps collection', classifiedX);
+
+//     Best map representing the most common pixel value based on all sets of training data
+var bestClassificationPxl = classifiedX.mode();
+
+//     The following map may not load due to memory limits, but should succesfully export to Assets or Drive
+Map.addLayer(bestClassificationPxl.toByte(), {min: 1, max: 11, palette: palette}, "Best pixel-based classification with 8 textures no DEM", false);
+
+//     Export the best map to Drive
+Export.image.toDrive({
+  image: bestClassificationPxl.toByte(),
+  description: "Pxl_8TEXnoDEM",
+  folder: "pixelBasedClassifications",
+  scale: 2.5,
+  region: table,
+  maxPixels:1e13,
+});
+
+//     Calculate the average overall accuracy
+var overallAccuracyPxl = ee.FeatureCollection(overallAccuracy.reduce(ee.Reducer.mean()));
+print('Overall accuracy with 8 textures no DEM', overallAccuracyPxl);
+
+//     Calculate the Standard Deviation based on overall accuracies from all training data
+var standardDeviation = ee.FeatureCollection(overallAccuracy.reduce(ee.Reducer.stdDev()));
+print('SD with 8 textures no DEM', standardDeviation);
+
+//     The "print" function may not always work due to the
+//     To make sure it works, we can reduce the number of training and testing datasets used
+//     For example, use just two datasets (2 instead of n in the beginning of the for loop)
+//     Otherwise, it should always be possible to export them to Drive
+Export.table.toDrive({
+  collection: overallAccuracyPxl,
+  description:'overallAccuracyPxl8TEXnoDEM10111040',
+  folder: 'classification_accuracies',
+  fileFormat: 'csv'
+});
+
+Export.table.toDrive({
+  collection: standardDeviation,
+  description:'standardDeviationPxl8TEXnoDEM10111040',
+  folder: 'classification_accuracies',
+  fileFormat: 'csv'
+});
+
+///////////// ///////////// ///////////// ///////////// ///////////// 5 TEX w DEM
+//     Concatenate all layers into one 
+var pixelPropertiesImage = ee.Image.cat([
+  MN_DA,
+  MN_DF,
+  stdDevDA,
+  stdDevDF,
+  ENT_DA,
+  ENT_DF,
+  HOM_DA,
+  HOM_DF,
+  SM_DA,
+  SM_DF,
+  elevation,
+  slope,
+  aspect
+  ]).float();
+// print (pixelPropertiesImage);
+var bandNames = pixelPropertiesImage.bandNames();
+print('pixelPropertiesImage bandNames with 5 textures with DEM', bandNames);
+var bandss = ['ds10111040da_mean', 'ds10111040df_mean', 'ds10111040da_stdDev', 'ds10111040df_stdDev', 'ds10111040da_asm', 'ds10111040df_asm', 'ds10111040da_ent', 'ds10111040df_ent', 'ds10111040da_idm', 'ds10111040df_idm', 'elevation', 'slope', 'aspect'];
+
+//     Generate an empty Image Collection to later add each of the 10 classification results
+  var classification = ee.ImageCollection([]);
+//     Generate an empty list to later add each of the overall accuracies to be averaged
+  var overallAccuracy = ee.List([]);
+//     Build a for loop to run a Random Forest classifier using one set of the training and testing data each time
+  for (var i=0; i<n; i++){
+//     Select the subsequent set of training data each time
+    var valueTR=ee.Dictionary(assetListTR.get(i));
+    var imgIDTR=ee.String(valueTR.get('id')).getInfo();
+    var train=ee.FeatureCollection(imgIDTR);
+    // print('train', train);
+    // trainingTR=training.merge(train)
+
+//     Overlay the points on the imagery to get training.
+var training = pixelPropertiesImage.sampleRegions({
+  collection: train,
+  properties: ['Classes'],
+  scale: 2.5
+});
+
+//     Train a CART classifier with default parameters
+var classifier = ee.Classifier.smileRandomForest(100).train(training, 'Classes', bandss);
+
+//      Classify the image with the same bands used for training
+var classified = pixelPropertiesImage.classify(classifier);
+// print('classified', classified); 
+// Map.addLayer(classified, {min: 1, max: 11, palette: palette}, 'Classification map with 5 textures with DEM' + (i+1), false);
+
+// //     Export the Image - uncomment if want to export each
+// Export.image.toAsset({
+//   image: classified.toByte(),//.toFloat(),
+//   description: "classification_pixel_5TEXwDEM" + (i+1),
+//   assetId: "classification_pixel_5TEXwDEM" + (i+1),
+//   scale: 2.5,
+//   region: geometry10111040,
+//   maxPixels:1e13,
+// });
+
+//     Overall map
+classification=classification.merge(classified);
+
+//     Validation
+//     Select the subsequent set of testing data each time
+  var valueTE=ee.Dictionary(assetListTE.get(i));
+  var imgIDTE=ee.String(valueTE.get('id')).getInfo();
+  var test=ee.FeatureCollection(imgIDTE);
+  // print('test', test);
+  // testing=testing.merge(test)
+
+var validation = pixelPropertiesImage.sampleRegions({
+  collection: test,
+  properties: ['Classes'],
+  scale: 2.5
+});
+var validated = validation.classify(classifier);
+
+//     Get a confusion matrix representing expected accuracy and an overall accuracy
+//     Uncomment the "print" commands if want to visualize the accuracies and matrices for each set of training and testing data in GEE console
+var testAccuracy = validated.errorMatrix('Classes', 'classification');
+var Matrix = ee.Feature(null, {matrix: testAccuracy.array()});
+// print('Validation error matrix with 5 textures with DEM' + (i+1), testAccuracy);
+var overall = testAccuracy.accuracy();
+// print('Overall' + (i+1), overall);
+
+// //    Export the matrix - uncomment if want to export each
+// Export.table.toDrive({
+//   collection: ee.FeatureCollection(Matrix),
+//   description:'testAccuracy_pixel08122021_wDEM' + (i+1),
+//   folder: 'testAccuracy',
+//   fileFormat: 'csv'
+// });
+
+//     Add subsequent overall accuracy with each loop, to initially empty "overallAccuracy" list
+overallAccuracy = overallAccuracy.add(overall);
+
+  }
+
+//     Image collection of classification results from each set of training data
+var classifiedX = classification;
+// print('Classification maps collection', classifiedX);
+
+//     Best map representing the most common pixel value based on all sets of training data
+var bestClassificationPxl = classifiedX.mode();
+
+//     The following map may not load due to memory limits, but should succesfully export to Assets or Drive
+Map.addLayer(bestClassificationPxl.toByte(), {min: 1, max: 11, palette: palette}, "Best pixel-based classification with 5 textures with DEM", false);
+
+//     Export the best map to Drive
+Export.image.toDrive({
+  image: bestClassificationPxl.toByte(),
+  description: "Pxl_5TEXwDEM",
+  folder: "pixelBasedClassifications",
+  scale: 2.5,
+  region: table,
+  maxPixels:1e13,
+});
+
+//     Calculate the average overall accuracy
+var overallAccuracyPxl = ee.FeatureCollection(overallAccuracy.reduce(ee.Reducer.mean()));
+print('Overall accuracy with 5 textures with DEM', overallAccuracyPxl);
+
+//     Calculate the Standard Deviation based on overall accuracies from all training data
+var standardDeviation = ee.FeatureCollection(overallAccuracy.reduce(ee.Reducer.stdDev()));
+print('SD with 5 textures with DEM', standardDeviation);
+
+//     The "print" function may not always work due to the
+//     To make sure it works, we can reduce the number of training and testing datasets used
+//     For example, use just two datasets (2 instead of n in the beginning of the for loop)
+//     Otherwise, it should always be possible to export them to Drive
+Export.table.toDrive({
+  collection: overallAccuracyPxl,
+  description:'overallAccuracyPxl5TEXwDEM10111040',
+  folder: 'classification_accuracies',
+  fileFormat: 'csv'
+});
+
+Export.table.toDrive({
+  collection: standardDeviation,
+  description:'standardDeviationPxl5TEXwDEM10111040',
+  folder: 'classification_accuracies',
+  fileFormat: 'csv'
+});
+
+///////////// ///////////// ///////////// ///////////// ///////////// 8 TEX w DEM
+//     Concatenate all layers into one 
+var pixelPropertiesImage = ee.Image.cat([
+  MN_DA,
+  MN_DF,
+  stdDevDA,
+  stdDevDF,
+  ENT_DA,
+  ENT_DF,
+  HOM_DA,
+  HOM_DF,
+  SM_DA,
+  SM_DF,
+  VAR_DA,
+  VAR_DF,
+  DIS_DA,
+  DIS_DF,
+  COR_DA,
+  COR_DF,
+  elevation,
+  slope,
+  aspect
+  ]).float();
+// print (pixelPropertiesImage);
+var bandNames = pixelPropertiesImage.bandNames();
+print('pixelPropertiesImage bandNames with 8 textures with DEM', bandNames);
+var bandss = ['ds10111040da_mean', 'ds10111040df_mean', 'ds10111040da_stdDev', 'ds10111040df_stdDev', 'ds10111040da_asm', 'ds10111040df_asm', 'ds10111040da_var', 'ds10111040df_var', 'ds10111040da_diss', 'ds10111040df_diss', 'ds10111040da_ent', 'ds10111040df_ent', 'ds10111040da_corr', 'ds10111040df_corr', 'ds10111040da_idm', 'ds10111040df_idm', 'elevation', 'slope', 'aspect'];
+
+//     Generate an empty Image Collection to later add each of the 10 classification results
+  var classification = ee.ImageCollection([]);
+//     Generate an empty list to later add each of the overall accuracies to be averaged
+  var overallAccuracy = ee.List([]);
+//     Build a for loop to run a Random Forest classifier using one set of the training and testing data each time
+  for (var i=0; i<n; i++){
+//     Select the subsequent set of training data each time
+    var valueTR=ee.Dictionary(assetListTR.get(i));
+    var imgIDTR=ee.String(valueTR.get('id')).getInfo();
+    var train=ee.FeatureCollection(imgIDTR);
+    // print('train', train);
+    // trainingTR=training.merge(train)
+
+//     Overlay the points on the imagery to get training.
+var training = pixelPropertiesImage.sampleRegions({
+  collection: train,
+  properties: ['Classes'],
+  scale: 2.5
+});
+
+//     Train a CART classifier with default parameters
+var classifier = ee.Classifier.smileRandomForest(100).train(training, 'Classes', bandss);
+
+//      Classify the image with the same bands used for training
+var classified = pixelPropertiesImage.classify(classifier);
+// print('classified', classified); 
+// Map.addLayer(classified, {min: 1, max: 11, palette: palette}, 'Classification map with 8 textures with DEM' + (i+1), false);
+
+// //     Export the Image - uncomment if want to export each
+// Export.image.toAsset({
+//   image: classified.toByte(),//.toFloat(),
+//   description: "classification_pixel_8TEXwDEM" + (i+1),
+//   assetId: "classification_pixel_8TEXwDEM" + (i+1),
+//   scale: 2.5,
+//   region: geometry10111040,
+//   maxPixels:1e13,
+// });
+
+//     Overall map
+classification=classification.merge(classified);
+
+//     Validation
+//     Select the subsequent set of testing data each time
+  var valueTE=ee.Dictionary(assetListTE.get(i));
+  var imgIDTE=ee.String(valueTE.get('id')).getInfo();
+  var test=ee.FeatureCollection(imgIDTE);
+  // print('test', test);
+  // testing=testing.merge(test)
+
+var validation = pixelPropertiesImage.sampleRegions({
+  collection: test,
+  properties: ['Classes'],
+  scale: 2.5
+});
+var validated = validation.classify(classifier);
+
+//     Get a confusion matrix representing expected accuracy and an overall accuracy
+//     Uncomment the "print" commands if want to visualize the accuracies and matrices for each set of training and testing data in GEE console
+var testAccuracy = validated.errorMatrix('Classes', 'classification');
+var Matrix = ee.Feature(null, {matrix: testAccuracy.array()});
+// print('Validation error matrix with 8 textures with DEM' + (i+1), testAccuracy);
+var overall = testAccuracy.accuracy();
+// print('Overall' + (i+1), overall);
+
+// //    Export the matrix - uncomment if want to export each
+// Export.table.toDrive({
+//   collection: ee.FeatureCollection(Matrix),
+//   description:'testAccuracy_pixel08122021_wDEM' + (i+1),
+//   folder: 'testAccuracy',
+//   fileFormat: 'csv'
+// });
+
+//     Add subsequent overall accuracy with each loop, to initially empty "overallAccuracy" list
+overallAccuracy = overallAccuracy.add(overall);
+
+  }
+
+//     Image collection of classification results from each set of training data
+var classifiedX = classification;
+// print('Classification maps collection', classifiedX);
+
+//     Best map representing the most common pixel value based on all sets of training data
+var bestClassificationPxl = classifiedX.mode();
+
+//     The following map may not load due to memory limits, but should succesfully export to Assets or Drive
+Map.addLayer(bestClassificationPxl.toByte(), {min: 1, max: 11, palette: palette}, "Best pixel-based classification with 8 textures with DEM", false);
+
+//     Export the best map to Drive
+Export.image.toDrive({
+  image: bestClassificationPxl.toByte(),
+  description: "Pxl_8TEXwDEM",
+  folder: "pixelBasedClassifications",
+  scale: 2.5,
+  region: table,
+  maxPixels:1e13,
+});
+
+//     Calculate the average overall accuracy
+var overallAccuracyPxl = ee.FeatureCollection(overallAccuracy.reduce(ee.Reducer.mean()));
+print('Overall accuracy with 8 textures with DEM', overallAccuracyPxl);
+
+//     Calculate the Standard Deviation based on overall accuracies from all training data
+var standardDeviation = ee.FeatureCollection(overallAccuracy.reduce(ee.Reducer.stdDev()));
+print('SD with 8 textures with DEM', standardDeviation);
+
+//     The "print" function may not always work due to the
+//     To make sure it works, we can reduce the number of training and testing datasets used
+//     For example, use just two datasets (2 instead of n in the beginning of the for loop)
+//     Otherwise, it should always be possible to export them to Drive
+Export.table.toDrive({
+  collection: overallAccuracyPxl,
+  description:'overallAccuracyPxl8TEXwDEM10111040',
+  folder: 'classification_accuracies',
+  fileFormat: 'csv'
+});
+
+Export.table.toDrive({
+  collection: standardDeviation,
+  description:'standardDeviationPxl8TEXwDEM10111040',
+  folder: 'classification_accuracies',
+  fileFormat: 'csv'
+});
 
