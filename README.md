@@ -11,7 +11,7 @@ Import the point grid in GEE as a FeatureCollection (Assets -> New -> Shape file
 
 Import the images to GEE (with the correct projection and 1 band). If the rasters are too large for GEE, apply a JPEG or LZW compression. For this, use OSGeo and follow the steps in **shellCode**.
 
-Use the code in **traObjExp** to export the objects corresponding to the point grid locations within the image. <a target="_blank" href="https://rizayeva.users.earthengine.app/view/step1">Click here to view</a> a sample of the results for **traObjExp**.
+Use the code in **traObjExp** to export the objects corresponding to the point grid locations within the image. <a target="_blank" href="https://afarizayeva.users.earthengine.app/view/coronaclassificationstep1">Click here to view</a> a sample of the results for **traObjExp**.
 
 After exporting the objects, overlay them with the point grid on your local workstation and label the land cover classes by creating a new "Classes" column in the point shapefile.
 
@@ -66,10 +66,10 @@ Follow the instructions provided in the beginning of the code.
 Due to memory limits depending on the size of your study area, the resulting maps may not be possible to visualize right away. In that case please export the maps and the accuracy results to Assets or Drive.
 
 
-<a target="_blank" href="https://rizayeva.users.earthengine.app/view/coronaclassificationvisualization">Click here to visualize</a> the results of the classification and the accuracy assessments for each method and scenario used in our paper.
+<a target="_blank" href="https://afarizayeva.users.earthengine.app/view/coronaclassificationvisualization">Click here to visualize</a> the results of the classification and the accuracy assessments for each method and scenario used in our paper.
 
 
 Should you have any questions, do not hesitate to reach out: rizayeva@wisc.edu
 
 For reference:
-Rizayeva, A., Nita, M.D., Radeloff, V.C., 2022 (in review), Large-area, 1964 land cover classifications of Corona spy satellite imagery for the Caucasus Mountains, *Remote Sensing of Environment*.
+Rizayeva, A., Nita, M.D., Radeloff, V.C. 2023. Large-area, 1964 land cover classifications of Corona spy satellite imagery for the Caucasus Mountains, *Remote Sensing of Environment*, 284, 113343.
