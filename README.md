@@ -72,4 +72,4 @@ Due to memory limits depending on the size of your study area, the resulting map
 Should you have any questions, do not hesitate to reach out: rizayeva@wisc.edu
 
 For reference:
-Rizayeva, A., Nita, M.D., Radeloff, V.C. 2023. Large-area, 1964 land cover classifications of Corona spy satellite imagery for the Caucasus Mountains, *Remote Sensing of Environment*, 284, 113343.
+Rizayeva, A., Nita, M.D., Radeloff, V.C. 2023. Large-area, 1964 land cover classifications of Corona spy satellite imagery for the Caucasus Mountains, *Remote Sensing of Environment, 284*, 113343.
